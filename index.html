@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>WorkBlocker PRO - Time-Boxing & Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .progress-bar-fill {
+            transition: width 1s linear, background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-amber-500 text-slate-950 p-2 rounded-xl font-bold text-xl">
+                <i class="fa-solid fa-cube"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-none">WorkBlocker <span class="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30">PRO</span></h1>
+                <p class="text-xs text-slate-400 mt-1">Time-Boxing & Gestione Progetti</p>
+            </div>
+        </div>
+
+        <!-- Dynamic Controls Header -->
+        <div class="flex items-center gap-3">
+            <button onclick="openMorningBriefing()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                <i class="fa-solid fa-sun"></i> Briefing Mattino
+            </button>
+            <button onclick="toggleAudioPreAlert()" id="audioPreAlertBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                <i class="fa-solid fa-bell"></i> Pre-avviso 30s
+            </button>
+            <button onclick="openNewProjectModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-lg shadow-emerald-900/20">
+                <i class="fa-solid fa-plus"></i> Nuovo Progetto
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+
+        <!-- Active Time-Block Timer Area -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-xl">
+            <div id="projectColorStrip" class="absolute top-0 left-0 right-0 h-1.5 bg-amber-500"></div>
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div class="space-y-2 flex-1">
+                    <span id="currentBlockBadge" class="text-xs font-semibold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">
+                        Blocco di Lavoro Corrente (60 min)
+                    </span>
+                    <h2 id="currentTaskTitle" class="text-2xl font-bold text-white mt-1">Inizia un nuovo blocco di lavoro</h2>
+                    <div class="flex items-center gap-4 text-sm text-slate-400">
+                        <span><i class="fa-solid fa-folder text-slate-500 mr-1.5"></i>Progetto: <strong id="currentProjectName" class="text-slate-200">Nessuno</strong></span>
+                        <span><i class="fa-solid fa-tag text-slate-500 mr-1.5"></i>Colore: <span id="currentProjectColorLabel" class="font-mono text-xs">Standard</span></span>
+                    </div>
+                </div>
+
+                <!-- Timer Counter -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl px-6 py-4 text-center min-w-[200px]">
+                    <div id="timerDisplay" class="text-4xl font-mono font-bold text-amber-400 tracking-wider">60:00</div>
+                    <div id="timerStatus" class="text-xs text-slate-500 uppercase tracking-widest mt-1">In Attesa</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-6 space-y-2">
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Avanzamento Blocco</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                    <div id="progressBar" class="progress-bar-fill bg-amber-500 h-full w-0"></div>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+                <button id="startBtn" onclick="startTimer()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 transition">
+                    <i class="fa-solid fa-play"></i> Avvia Blocco
+                </button>
+                <button id="pauseBtn" onclick="pauseTimer()" disabled class="bg-slate-800 text-slate-500 px-5 py-2.5 rounded-lg flex items-center gap-2 transition cursor-not-allowed">
+                    <i class="fa-solid fa-pause"></i> Pausa
+                </button>
+                <button id="completeBtn" onclick="completeBlock()" disabled class="bg-slate-800 text-slate-500 px-5 py-2.5 rounded-lg flex items-center gap-2 transition cursor-not-allowed">
+                    <i class="fa-solid fa-check"></i> Completa Blocco
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Tasks Queue -->
+            <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <h3 class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-amber-400"></i> Pianificazione Attività del Giorno
+                    </h3>
+                    <span id="taskCount" class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full">0 attività</span>
+                </div>
+
+                <div id="tasksList" class="space-y-3">
+                    <!-- Dynamic tasks will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Quick Voice/Text Memo Section -->
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div class="border-b border-slate-800 pb-4 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> Appunti al Volo
+                    </h3>
+                    <span class="text-xs text-slate-500">Ottimizzato Mobile</span>
+                </div>
+
+                <div class="space-y-3">
+                    <textarea id="memoInput" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 transition resize-none" placeholder="Scrivi un'idea o task al volo..."></textarea>
+
+                    <div class="flex gap-2">
+                        <select id="memoProjectSelect" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-amber-500">
+                            <option value="">Nessun Progetto (Generale)</option>
+                        </select>
+                        <button onclick="saveMemo()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-xs transition">
+                            Salva
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800">
+                    <h4 class="text-xs font-semibold text-slate-400 mb-2">Ultimi Memo Registrati:</h4>
+                    <div id="memoHistory" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs text-slate-400">
+                        <!-- Dynamic memos rendered here -->
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Morning Briefing Modal -->
+    <div id="briefingModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-amber-400 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-sun"></i> Briefing del Mattino
+                </h3>
+                <button onclick="closeBriefingModal()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-sm text-slate-300">Ecco il quadro programmatico per la giornata di oggi:</p>
+            <div id="briefingContent" class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-sm space-y-2 text-slate-300">
+                <!-- Dynamic Content -->
+            </div>
+            <button onclick="closeBriefingModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold py-2.5 rounded-xl text-sm transition">
+                Inizia la Giornata
+            </button>
+        </div>
+    </div>
+
+    <!-- Main JS Application Logic -->
+    <script>
+        // Force unregister stale PWA Service Workers automatically
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+
+        // Global State
+        let timerInterval = null;
+        let totalSeconds = 3600;
+        let remainingSeconds = 3600;
+        let isRunning = false;
+        let preAlertEnabled = true;
+        let preAlertTriggered = false;
+
+        let projects = [
+            { id: 1, name: "Restyling Brand & Web", color: "#f59e0b" },
+            { id: 2, name: "Integrazione API Pagamenti", color: "#10b981" }
+        ];
+
+        let tasks = [
+            { id: 101, title: "Creazione Componenti Button & Modal", projectId: 1, duration: 60, completed: false },
+            { id: 102, title: "Configurazione Webhooks Stripe", projectId: 2, duration: 45, completed: false }
+        ];
+
+        let memos = [];
+
+        // App Initialization
+        window.onload = function() {
+            renderTasks();
+            populateProjectSelects();
+            updateTimerDisplay();
+        };
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('timerDisplay').innerText = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            const percent = Math.round(((totalSeconds - remainingSeconds) / totalSeconds) * 100);
+            document.getElementById('progressBar').style.width = `${percent}%`;
+            document.getElementById('progressPercent').innerText = `${percent}%`;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('timerStatus').innerText = "In Corso";
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('completeBtn').disabled = false;
+
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateTimerDisplay();
+
+                    // Pre-alert trigger at 30 seconds
+                    if (preAlertEnabled && remainingSeconds === 30 && !preAlertTriggered) {
+                        triggerPreAlert();
+                    }
+                } else {
+                    completeBlock();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            document.getElementById('timerStatus').innerText = "In Pausa";
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+
+        function completeBlock() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            remainingSeconds = totalSeconds;
+            preAlertTriggered = false;
+            updateTimerDisplay();
+            document.getElementById('timerStatus').innerText = "Completato";
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('completeBtn').disabled = true;
+            speakText("Blocco di lavoro completato. Fai 5 minuti di pausa.");
+        }
+
+        function triggerPreAlert() {
+            preAlertTriggered = true;
+            speakText("Attenzione: 30 secondi al termine del blocco di lavoro.");
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'it-IT';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('tasksList');
+            container.innerHTML = '';
+
+            tasks.forEach(task => {
+                const project = projects.find(p => p.id === task.projectId) || { name: 'Generale', color: '#64748b' };
+                const div = document.createElement('div');
+                div.className = "bg-slate-950 border border-slate-800 p-4 rounded-xl flex justify-between items-center";
+                div.innerHTML = `
+                    <div class="space-y-1">
+                        <h4 class="font-semibold text-slate-200 text-sm">${task.title}</h4>
+                        <span class="text-xs px-2 py-0.5 rounded" style="background-color: ${project.color}20; color: ${project.color}; border: 1px solid ${project.color}40">
+                            ${project.name}
+                        </span>
+                    </div>
+                    <button onclick="selectTask(${task.id})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-medium transition">
+                        Seleziona
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('taskCount').innerText = `${tasks.length} attività`;
+        }
+
+        function selectTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            const project = projects.find(p => p.id === task.projectId) || { name: 'Generale', color: '#f59e0b' };
+
+            document.getElementById('currentTaskTitle').innerText = task.title;
+            document.getElementById('currentProjectName').innerText = project.name;
+            document.getElementById('currentProjectColorLabel').innerText = project.color;
+            document.getElementById('projectColorStrip').style.backgroundColor = project.color;
+            document.getElementById('progressBar').style.backgroundColor = project.color;
+
+            totalSeconds = task.duration * 60;
+            remainingSeconds = totalSeconds;
+            preAlertTriggered = false;
+            updateTimerDisplay();
+        }
+
+        function populateProjectSelects() {
+            const select = document.getElementById('memoProjectSelect');
+            select.innerHTML = '<option value="">Nessun Progetto (Generale)</option>';
+            projects.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.innerText = p.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function saveMemo() {
+            const text = document.getElementById('memoInput').value.trim();
+            if (!text) return;
+
+            const projId = document.getElementById('memoProjectSelect').value;
+            const project = projects.find(p => p.id == projId);
+
+            memos.unshift({
+                text: text,
+                project: project ? project.name : 'Generale',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            document.getElementById('memoInput').value = '';
+            renderMemos();
+        }
+
+        function renderMemos() {
+            const container = document.getElementById('memoHistory');
+            container.innerHTML = memos.map(m => `
+                <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-1">
+                    <p class="text-slate-200">${m.text}</p>
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span>${m.project}</span>
+                        <span>${m.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAudioPreAlert() {
+            preAlertEnabled = !preAlertEnabled;
+            const btn = document.getElementById('audioPreAlertBtn');
+            if (preAlertEnabled) {
+                btn.className = "bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition";
+            } else {
+                btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-500 border border-slate-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition";
+            }
+        }
+
+        function openMorningBriefing() {
+            const modal = document.getElementById('briefingModal');
+            const content = document.getElementById('briefingContent');
+            content.innerHTML = `
+                <p><strong>Pianificazione attiva:</strong> ${tasks.length} blocchi di lavoro in programma.</p>
+                <p><strong>Progetto prioritario:</strong> ${projects[0] ? projects[0].name : 'Nessuno'}</p>
+                <p><strong>Tempo stimato totale:</strong> ${tasks.reduce((a, b) => a + b.duration, 0)} minuti.</p>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function closeBriefingModal() {
+            document.getElementById('briefingModal').classList.add('hidden');
+        }
+
+        function openNewProjectModal() {
+            const name = prompt("Nome del nuovo progetto:");
+            if (name) {
+                const color = prompt("Codice colore HEX (es. #3b82f6):", "#3b82f6");
+                projects.push({ id: Date.now(), name: name, color: color || "#3b82f6" });
+                populateProjectSelects();
+                renderTasks();
+            }
+        }
+    </script>
+</body>
+</html>
