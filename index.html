@@ -9,8 +9,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        .bg-viola-ritardo { background-color: #8b5cf6; }
-        .text-viola-ritardo { color: #8b5cf6; }
+        .bg-viola-ritardo { background-color: #8b5cf6 !important; }
+        .text-viola-ritardo { color: #8b5cf6 !important; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
@@ -23,17 +23,13 @@
             <span id="sync-status" class="text-xs px-2 py-1 rounded bg-yellow-600 text-white">Connessione Cloud...</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded text-sm font-medium flex items-center space-x-1 transition">
-                <span>☀️ Briefing Mattino</span>
-            </button>
-            <button onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded text-sm font-medium flex items-center space-x-1 transition">
-                <span>🔔 Pre-avviso 30s</span>
-            </button>
+            <button onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded text-xs md:text-sm font-medium transition">☀️ Briefing Mattino</button>
+            <button onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded text-xs md:text-sm font-medium transition">🔔 Pre-avviso 30s</button>
         </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <nav class="bg-slate-800/80 border-b border-slate-700 px-4 py-2 flex space-x-4 overflow-x-auto text-sm">
+    <nav class="bg-slate-800/80 border-b border-slate-700 px-4 py-2 flex space-x-2 md:space-x-4 overflow-x-auto text-xs md:text-sm">
         <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 rounded bg-indigo-600 text-white font-medium transition">Dashboard & Attività</button>
         <button onclick="switchTab('pianificazione')" id="tab-pianificazione" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition">Pianificazione</button>
         <button onclick="switchTab('archivio')" id="tab-archivio" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition">Archivio</button>
@@ -43,71 +39,80 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto p-4 space-y-6">
         
-        <!-- SEZIONE 1 & 4: DASHBOARD & ATTIVITA IN CORSO -->
+        <!-- SEZIONE 1: DASHBOARD & ATTIVITA IN CORSO -->
         <div id="section-dashboard" class="space-y-6">
             
             <!-- Timer & Active Control Board (Avvia la giornata) -->
             <div id="timer-box" class="bg-slate-800 p-6 rounded-xl border border-indigo-500/50 shadow-lg hidden flex flex-col items-center justify-center space-y-4">
                 <span id="active-task-title" class="text-base font-semibold text-indigo-300 uppercase tracking-wider text-center">Nessuna attività in corso</span>
-                <div id="countdown-display" class="text-6xl font-mono font-bold text-white tracking-widest">00:00</div>
+                <div id="countdown-display" class="text-5xl md:text-6xl font-mono font-bold text-white tracking-widest">00:00</div>
                 
-                <!-- Milestone e sub-task dell'attività in corso -->
-                <div id="active-task-details" class="w-full bg-slate-900 p-4 rounded-lg border border-slate-700 space-y-2 text-sm">
-                    <!-- Dinamico -->
+                <div id="active-task-details" class="w-full bg-slate-900 p-4 rounded-lg border border-slate-700 space-y-2 text-xs md:text-sm">
+                    <!-- Milestone attive -->
                 </div>
 
                 <div class="flex space-x-3 pt-2">
-                    <button onclick="pauseTimer()" id="pause-btn" class="bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded text-sm font-medium transition">Pausa</button>
-                    <button onclick="completeActiveTask()" class="bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded text-sm font-medium transition">Completa Attività</button>
+                    <button onclick="pauseTimer()" id="pause-btn" class="bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded text-xs md:text-sm font-medium transition">Pausa</button>
+                    <button onclick="completeActiveTask()" class="bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded text-xs md:text-sm font-medium transition">Completa Attività</button>
                 </div>
             </div>
 
             <!-- Avvio Programmazione Giornaliera Form -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Avvia Programmazione Giornaliera</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Avvia Inserimento in Programmazione Giornaliera</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona Progetto Pianificato</label>
-                        <select id="sched-project" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-300">
-                            <option value="">Seleziona...</option>
+                        <select id="sched-project" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-slate-300">
+                            <option value="">Seleziona Progetto...</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Nome Esecutore</label>
-                        <input type="text" id="sched-executor" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm" placeholder="Es. Matteo Pavese">
+                        <input type="text" id="sched-executor" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm" placeholder="Es. Matteo Pavese">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Slot Orario (Minuti)</label>
-                        <input type="number" id="sched-minutes" value="60" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                        <input type="number" id="sched-minutes" value="60" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                     </div>
-                    <div class="md:col-span-3 flex justify-end">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded text-sm transition">Avvia Attività Giornaliera</button>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Fascia Oraria Preferita</label>
+                        <input type="text" id="sched-timeframe" placeholder="Es. 09:00 - 13:00" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Giorni della Settimana</label>
+                        <input type="text" id="sched-days" placeholder="Es. Lun, Mer, Ven" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded text-xs md:text-sm transition">Avvia Attività Giornaliera</button>
                     </div>
                 </form>
             </div>
 
-            <!-- Dashboard List (Orizzontale & Verticale) -->
+            <!-- Dashboard Sintetica Attività -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-lg font-semibold text-indigo-300">📊 Dashboard Attività</h2>
-                    <span class="text-xs text-slate-400">Clicca su una barra per aprire la scheda dettagliata</span>
+                    <h2 class="text-lg font-semibold text-indigo-300">📊 Dashboard Riepilogativa Attività</h2>
+                    <span class="text-xs text-slate-400">Barre viola = Scadenza Superata</span>
                 </div>
                 <div id="dashboard-list" class="space-y-4">
-                    <!-- Dinamico -->
+                    <!-- Contenuto dinamico -->
                 </div>
             </div>
         </div>
 
-        <!-- SEZIONE 1 & 2: PIANIFICAZIONE PROGETTI -->
+        <!-- SEZIONE 2: PIANIFICAZIONE PROGETTI -->
         <div id="section-pianificazione" class="space-y-6 hidden">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Nuova Scheda Progetto & Pianificazione</h2>
+                <h2 id="form-proj-title" class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Nuova Scheda Progetto</h2>
                 
                 <form id="project-form" onsubmit="saveProject(event)" class="space-y-4">
+                    <input type="hidden" id="editing-proj-id" value="">
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-slate-400 mb-1">Nome Progetto</label>
-                            <input type="text" id="p-name" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm" placeholder="Es. Ristrutturazione Villa Roma">
+                            <input type="text" id="p-name" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm" placeholder="Es. Ristrutturazione Villa Roma">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
@@ -115,35 +120,38 @@
                                 <input type="color" id="p-color" value="#4f46e5" class="w-full h-9 bg-slate-900 border border-slate-700 rounded cursor-pointer p-1">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1">Data Presunta Fine</label>
-                                <input type="date" id="p-enddate" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Data Presunta Completamento</label>
+                                <input type="date" id="p-enddate" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                             </div>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Link Cartella Condivisa OneDrive</label>
-                        <input type="url" id="p-link" placeholder="https://onedrive.live.com/..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                        <input type="url" id="p-link" placeholder="https://onedrive.live.com/..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                     </div>
 
-                    <!-- Milestone & Sub-tasks builder -->
+                    <!-- Builder Milestones e Sub-tasks -->
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Milestones e Sub-tasks</label>
                         <div id="milestones-container" class="space-y-3 mb-2">
                             <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
                                 <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                                <input type="text" placeholder="Sub-task (separa con virgola o aggiungi sotto)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                                <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                             </div>
                         </div>
-                        <button type="button" onclick="addMilestoneField()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Aggiungi un'altra Milestone</button>
+                        <button type="button" onclick="addMilestoneField()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Aggiungi Milestone</button>
                     </div>
 
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded text-sm transition">Salva in Pianificazione</button>
+                    <div class="flex space-x-2">
+                        <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded text-xs md:text-sm transition">Salva in Pianificazione</button>
+                        <button type="button" onclick="resetProjectForm()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-xs md:text-sm">Annulla</button>
+                    </div>
                 </form>
             </div>
 
-            <!-- Lista Progetti Pianificati (Non avviati) -->
+            <!-- Progetti Pianificati in Attesa -->
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📋 Progetti Pianificati in Attesa</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📋 Progetti Pianificati in Attesa di Avvio</h2>
                 <div id="planned-projects-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Dinamico -->
                 </div>
@@ -167,34 +175,22 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Associa a Progetto</label>
-                        <select id="note-project-select" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-300">
+                        <select id="note-project-select" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-slate-300">
                             <option value="">Seleziona Progetto...</option>
                         </select>
                     </div>
-                    <button type="button" onclick="toggleVoiceRecording()" class="w-full bg-rose-600 hover:bg-rose-700 py-2 rounded text-sm font-medium transition">Avvia Registrazione Vocale</button>
-                    <textarea id="voice-note-text" placeholder="Il testo trascritto comparirà qui..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm h-24 focus:outline-none"></textarea>
-                    <button type="button" onclick="saveVoiceNote()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded text-sm font-medium transition">Salva Nota nel Progetto</button>
+                    <button type="button" onclick="toggleVoiceRecording()" class="w-full bg-rose-600 hover:bg-rose-700 py-2 rounded text-xs md:text-sm font-medium transition">Avvia Registrazione Vocale</button>
+                    <textarea id="voice-note-text" placeholder="Il testo trascritto comparirà qui..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm h-24 focus:outline-none"></textarea>
+                    <button type="button" onclick="saveVoiceNote()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded text-xs md:text-sm font-medium transition">Salva Nota nel Progetto</button>
+                </div>
+                <div class="pt-4 border-t border-slate-700">
+                    <h3 class="text-sm font-semibold text-indigo-300 mb-2">Storico Tutte le Note Registrate</h3>
+                    <div id="all-notes-list" class="space-y-2"></div>
                 </div>
             </div>
         </div>
 
     </main>
-
-    <!-- Modal Dettaglio Scheda -->
-    <div id="detail-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 id="modal-title" class="text-lg font-bold text-indigo-300">Dettaglio Progetto</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
-            </div>
-            <div id="modal-content" class="space-y-3 text-sm">
-                <!-- Dinamico -->
-            </div>
-            <div class="flex justify-end pt-2">
-                <button onclick="closeModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-1.5 rounded text-xs">Chiudi</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         const firebaseConfig = {
@@ -211,7 +207,6 @@
         const db = firebase.database();
 
         let appData = { projects: [], schedules: [], archive: [], notes: [] };
-        let activeTimer = null;
         let remainingSeconds = 0;
         let isPaused = false;
         let currentActiveSchedule = null;
@@ -246,19 +241,20 @@
             document.getElementById(`tab-${tabId}`).className = "px-3 py-1.5 rounded bg-indigo-600 text-white font-medium transition";
         }
 
-        function addMilestoneField() {
+        function addMilestoneField(name = '', sub = '') {
             const container = document.getElementById('milestones-container');
             const div = document.createElement('div');
             div.className = 'bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block';
             div.innerHTML = `
-                <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                <input type="text" placeholder="Sub-task (separa con virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                <input type="text" placeholder="Nome Milestone" value="${name}" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                <input type="text" placeholder="Sub-task (separate da virgola)" value="${sub}" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
             `;
             container.appendChild(div);
         }
 
         function saveProject(e) {
             e.preventDefault();
+            const editId = document.getElementById('editing-proj-id').value;
             const name = document.getElementById('p-name').value;
             const color = document.getElementById('p-color').value;
             const endDate = document.getElementById('p-enddate').value;
@@ -266,38 +262,68 @@
             
             const blocks = document.querySelectorAll('.milestone-block');
             const milestones = Array.from(blocks).map(b => {
+                const subStr = b.querySelector('.m-sub').value;
                 return {
                     name: b.querySelector('.m-name').value,
-                    subtasks: b.querySelector('.m-sub').value.split(',').map(s => s.trim()).filter(s => s)
+                    subtasks: subStr ? subStr.split(',').map(s => s.trim()).filter(s => s) : []
                 };
             }).filter(m => m.name.trim() !== '');
 
-            const newProj = {
-                id: Date.now(),
-                name,
-                color,
-                endDate,
-                link,
-                milestones,
-                startDate: new Date().toISOString().split('T')[0]
-            };
+            if (editId) {
+                const idx = appData.projects.findIndex(p => p.id == editId);
+                if (idx !== -1) {
+                    appData.projects[idx] = { ...appData.projects[idx], name, color, endDate, link, milestones };
+                }
+            } else {
+                const newProj = {
+                    id: Date.now(),
+                    name,
+                    color,
+                    endDate,
+                    link,
+                    milestones,
+                    startDate: new Date().toISOString().split('T')[0]
+                };
+                appData.projects.push(newProj);
+            }
 
-            appData.projects.push(newProj);
             saveToCloud();
-            document.getElementById('project-form').reset();
-            switchTab('dashboard');
-            alert('Progetto salvato con successo nella pianificazione!');
+            resetProjectForm();
+            switchTab('pianificazione');
+            alert('Progetto salvato con successo!');
         }
 
-        function copyProject(id) {
+        function editProject(id) {
             const p = appData.projects.find(proj => proj.id == id);
             if (!p) return;
-            const copy = JSON.parse(JSON.stringify(p));
-            copy.id = Date.now();
-            copy.name = `${p.name} (Copia)`;
-            appData.projects.push(copy);
-            saveToCloud();
-            alert('Progetto duplicato con successo!');
+
+            document.getElementById('editing-proj-id').value = p.id;
+            document.getElementById('form-proj-title').innerText = '✏️ Modifica Progetto';
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-color').value = p.color;
+            document.getElementById('p-enddate').value = p.endDate;
+            document.getElementById('p-link').value = p.link || '';
+
+            const container = document.getElementById('milestones-container');
+            container.innerHTML = '';
+            if (p.milestones && p.milestones.length > 0) {
+                p.milestones.forEach(m => addMilestoneField(m.name, m.subtasks ? m.subtasks.join(', ') : ''));
+            } else {
+                addMilestoneField();
+            }
+
+            switchTab('pianificazione');
+        }
+
+        function resetProjectForm() {
+            document.getElementById('project-form').reset();
+            document.getElementById('editing-proj-id').value = '';
+            document.getElementById('form-proj-title').innerText = '📁 Nuova Scheda Progetto';
+            document.getElementById('milestones-container').innerHTML = `
+                <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
+                    <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                    <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                </div>`;
         }
 
         function startDailySchedule(e) {
@@ -305,6 +331,8 @@
             const projId = document.getElementById('sched-project').value;
             const executor = document.getElementById('sched-executor').value;
             const minutes = parseInt(document.getElementById('sched-minutes').value);
+            const timeframe = document.getElementById('sched-timeframe').value;
+            const days = document.getElementById('sched-days').value;
 
             const proj = appData.projects.find(p => p.id == projId);
             if (!proj) return;
@@ -316,9 +344,11 @@
                 color: proj.color,
                 executor,
                 minutes,
+                timeframe,
+                days,
                 startDate: new Date().toISOString().split('T')[0],
                 endDate: proj.endDate,
-                milestones: proj.milestones,
+                milestones: proj.milestones || [],
                 link: proj.link
             };
 
@@ -327,13 +357,14 @@
 
             startCountdown(minutes * 60, proj.name);
             document.getElementById('schedule-form').reset();
+            switchTab('dashboard');
         }
 
         function renderUI() {
-            // Select Progetti Pianificati
+            // Dropdown Progetti
             const projSelect = document.getElementById('sched-project');
             const noteSelect = document.getElementById('note-project-select');
-            projSelect.innerHTML = '<option value="">Seleziona...</option>';
+            projSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
             noteSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
 
             appData.projects.forEach(p => {
@@ -341,54 +372,73 @@
                 noteSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
             });
 
-            // Lista Pianificati
+            // Lista Pianificati con Milestone e Sub-task visibili
             const plannedList = document.getElementById('planned-projects-list');
             plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
+            
             appData.projects.forEach(p => {
+                const projNotes = appData.notes.filter(n => n.projId == p.id);
+                let milestonesHtml = (p.milestones || []).map(m => `
+                    <div class="text-xs text-slate-300">
+                        • <b>${m.name}</b> ${m.subtasks && m.subtasks.length > 0 ? `<span class="text-slate-400">(Sub: ${m.subtasks.join(', ')})</span>` : ''}
+                    </div>
+                `).join('');
+
+                let notesHtml = projNotes.map(n => `<div class="text-[11px] text-amber-300 italic">🎙️ "${n.text}" (${n.date})</div>`).join('');
+
                 plannedList.innerHTML += `
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2">
+                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
-                            <button onclick="copyProject(${p.id})" class="text-xs bg-indigo-600 hover:bg-indigo-700 px-2 py-1 rounded">Copia</button>
+                            <div class="space-x-1">
+                                <button onclick="editProject(${p.id})" class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">✏️ Modifica</button>
+                            </div>
                         </div>
-                        <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
-                        <p class="text-xs text-slate-400">Milestones: ${p.milestones.length}</p>
+                        <p class="text-xs text-slate-400">Data Scadenza Presunta: <b>${p.endDate}</b></p>
+                        <div class="border-t border-slate-800 pt-2 space-y-1">
+                            <span class="text-[11px] font-semibold text-indigo-300">Struttura Milestone:</span>
+                            ${milestonesHtml || '<p class="text-xs text-slate-500">Nessuna milestone</p>'}
+                        </div>
+                        ${notesHtml ? `<div class="border-t border-slate-800 pt-2 space-y-1"><span class="text-[11px] font-semibold text-amber-400">Note Vocali:</span>${notesHtml}</div>` : ''}
                     </div>
                 `;
             });
 
-            // Dashboard & Avanzamento
+            // Dashboard Riepilogativa Attività
             const dash = document.getElementById('dashboard-list');
-            dash.innerHTML = appData.schedules.length === 0 ? '<p class="text-xs text-slate-400">Nessuna attività attiva nella programmazione giornaliera.</p>' : '';
+            dash.innerHTML = appData.schedules.length === 0 ? '<p class="text-xs text-slate-400">Nessuna attività in programmazione giornaliera.</p>' : '';
             
             appData.schedules.forEach(s => {
                 const today = new Date();
+                today.setHours(0,0,0,0);
                 const endDate = new Date(s.endDate);
+                endDate.setHours(0,0,0,0);
                 const startDate = new Date(s.startDate);
+                startDate.setHours(0,0,0,0);
+
                 const totalDays = Math.max(1, (endDate - startDate) / (1000 * 60 * 60 * 24));
                 const passedDays = Math.max(0, (today - startDate) / (1000 * 60 * 60 * 24));
                 let progress = Math.min(100, Math.round((passedDays / totalDays) * 100));
                 
-                let barColor = 'bg-indigo-600';
                 let isDelayed = today > endDate;
-                if (isDelayed) barColor = 'bg-viola-ritardo';
+                let barColor = isDelayed ? 'bg-viola-ritardo' : 'bg-indigo-600';
 
-                let milestonesHtml = s.milestones.map(m => `<li class="text-xs text-slate-300">• ${m.name}</li>`).join('');
-
+                let mList = (s.milestones || []).map(m => `<span class="inline-block bg-slate-800 text-[10px] px-2 py-0.5 rounded text-slate-300 mr-1 mb-1">• ${m.name}</span>`).join('');
+                
                 dash.innerHTML += `
-                    <div onclick="openDetailModal(${s.id})" class="bg-slate-900 p-4 rounded-xl border border-slate-700 hover:border-indigo-500 cursor-pointer transition space-y-3">
-                        <div class="flex justify-between items-center text-xs">
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                        <div class="flex justify-between items-center">
                             <span class="font-bold text-sm" style="color: ${s.color}">${s.projectName}</span>
-                            <span class="text-slate-400">Esecutore: ${s.executor}</span>
+                            <span class="text-xs text-slate-400">Esecutore: <b>${s.executor}</b></span>
                         </div>
                         <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
                             <div class="${barColor} h-3 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
                         </div>
-                        <div class="flex justify-between text-[11px] text-slate-400">
-                            <span>Avvio: ${s.startDate}</span>
-                            <span>Scadenza: ${s.endDate} ${isDelayed ? '⚠️ IN RITARDO (Viola)' : ''}</span>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Avanzamento: <b>${progress}%</b></span>
+                            <span>Data Presunta Scadenza: <b class="${isDelayed ? 'text-viola-ritardo font-bold' : 'text-slate-300'}">${s.endDate} ${isDelayed ? '⚠️ RITARDO' : ''}</b></span>
                         </div>
-                        <ul class="pl-2 space-y-1 border-t border-slate-800 pt-2">${milestonesHtml}</ul>
+                        <div class="pt-1">${mList}</div>
                     </div>
                 `;
             });
@@ -398,145 +448,16 @@
             archList.innerHTML = appData.archive.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto archiviato.</p>' : '';
             appData.archive.forEach(a => {
                 archList.innerHTML += `
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2">
+                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-1">
                         <div class="flex justify-between">
                             <span class="font-bold text-sm" style="color: ${a.color}">${a.projectName}</span>
                             <span class="text-xs text-emerald-400 font-medium">Completato</span>
                         </div>
-                        <p class="text-xs text-slate-400">Esecutore: ${a.executor}</p>
-                        <p class="text-xs text-slate-400">Completato il: ${a.completedAt}</p>
+                        <p class="text-xs text-slate-400">Esecutore: ${a.executor} | Data Archiviazione: ${a.completedAt}</p>
                     </div>
                 `;
             });
-        }
 
-        function startCountdown(seconds, taskName) {
-            document.getElementById('timer-box').classList.remove('hidden');
-            document.getElementById('active-task-title').innerText = `Attività in corso: ${taskName}`;
-            
-            if (currentActiveSchedule && currentActiveSchedule.milestones) {
-                let detailsHtml = '<span class="text-xs font-bold text-indigo-300">Milestones e Sub-task:</span>';
-                currentActiveSchedule.milestones.forEach(m => {
-                    detailsHtml += `<div class="text-xs text-slate-300 mt-1">✔ <b>${m.name}</b>`;
-                    if(m.subtasks.length > 0) detailsHtml += `<br>&nbsp;&nbsp;&nbsp;&nbsp;↳ Sub: ${m.subtasks.join(', ')}`;
-                    detailsHtml += `</div>`;
-                });
-                document.getElementById('active-task-details').innerHTML = detailsHtml;
-            }
-
-            remainingSeconds = seconds;
-            isPaused = false;
-
-            if (window.timerInterval) clearInterval(window.timerInterval);
-
-            window.timerInterval = setInterval(() => {
-                if (!isPaused) {
-                    remainingSeconds--;
-                    let m = Math.floor(remainingSeconds / 60);
-                    let s = remainingSeconds % 60;
-                    document.getElementById('countdown-display').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-
-                    if (remainingSeconds <= 0) {
-                        clearInterval(window.timerInterval);
-                        alert('Tempo scaduto per questa attività!');
-                    }
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            isPaused = !isPaused;
-            document.getElementById('pause-btn').innerText = isPaused ? 'Riprendi' : 'Pausa';
-            if (isPaused) {
-                if (confirm('Interruzione registrata. Vuoi slittare la programmazione o ridurre automaticamente le attività successive? (OK = Slitta, Annulla = Riduce)')) {
-                    alert('Programmazione slittata del ritardo generato.');
-                } else {
-                    alert('Attività successive ridotte proporzionalmente.');
-                }
-            }
-        }
-
-        function completeActiveTask() {
-            if (!currentActiveSchedule) return;
-            clearInterval(window.timerInterval);
-            document.getElementById('timer-box').classList.add('hidden');
-            
-            currentActiveSchedule.completedAt = new Date().toLocaleDateString();
-            appData.archive.push(currentActiveSchedule);
-            appData.schedules = appData.schedules.filter(s => s.id !== currentActiveSchedule.id);
-            currentActiveSchedule = null;
-
-            saveToCloud();
-            alert('Attività completata e spostata nell\'archivio con successo!');
-        }
-
-        function openDetailModal(id) {
-            const sched = appData.schedules.find(s => s.id == id);
-            if (!sched) return;
-
-            document.getElementById('modal-title').innerText = sched.projectName;
-            let content = `<p class="text-xs text-slate-400">Esecutore: <b>${sched.executor}</b></p>`;
-            content += `<p class="text-xs text-slate-400">Periodo: ${sched.startDate} → ${sched.endDate}</p>`;
-            if(sched.link) content += `<p class="text-xs"><a href="${sched.link}" target="_blank" class="text-indigo-400 underline">Apri cartella OneDrive</a></p>`;
-            
-            content += `<div class="mt-3 space-y-2"><span class="text-xs font-bold text-indigo-300">Milestone e Sub-task:</span>`;
-            sched.milestones.forEach(m => {
-                content += `<div class="bg-slate-900 p-2 rounded text-xs"><b>${m.name}</b><br>Sub-tasks: ${m.subtasks.join(', ') || 'Nessuna'}</div>`;
-            });
-            content += `</div>`;
-
-            document.getElementById('modal-content').innerHTML = content;
-            document.getElementById('detail-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('detail-modal').classList.add('hidden');
-        }
-
-        function triggerMorningBriefing() {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance("Buongiorno Matteo. Le condizioni meteo a Roma sono stabili con ventidue gradi. Oggi hai in programma la gestione della ristrutturazione. Non ci sono scadenze critiche nei prossimi cinque giorni.");
-                utterance.lang = 'it-IT';
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
-        function triggerPreAlert() {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance("Attenzione. Tra trenta secondi si avvia la programmazione giornaliera.");
-                utterance.lang = 'it-IT';
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
-        function toggleVoiceRecording() {
-            const textArea = document.getElementById('voice-note-text');
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Riconoscimento vocale non supportato da questo browser.');
-                return;
-            }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'it-IT';
-            recognition.onresult = function(event) {
-                textArea.value = event.results[0][0].transcript;
-            };
-            recognition.start();
-            alert('Ascolto in corso... Parla ora.');
-        }
-
-        function saveVoiceNote() {
-            const projId = document.getElementById('note-project-select').value;
-            const text = document.getElementById('voice-note-text').value;
-            if(!projId || !text) {
-                alert('Seleziona un progetto e inserisci il testo della nota.');
-                return;
-            }
-            appData.notes.push({ projId, text, date: new Date().toLocaleDateString() });
-            saveToCloud();
-            document.getElementById('voice-note-text').value = '';
-            alert('Nota vocale salvata e associata al progetto!');
-        }
-    </script>
-</body>
-</html>
+            // Note Vocali
+            const notesList = document.getElementById('all-notes-list');
+            notesList.innerHTML = appData.notes.length === 0 ? '<p class="text-xs text-slate-400">Nessuna nota vocale registrata.</p>'
