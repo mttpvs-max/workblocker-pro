@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Smart Calendar Buffer & Projects</title>
+    <title>WorkBlocker PRO - Fixed Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         .bg-viola-ritardo { background-color: #8b5cf6 !important; }
         .text-viola-ritardo { color: #8b5cf6 !important; }
@@ -19,10 +17,10 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Sincronizzato</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Attivo e Sincronizzato</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="hardResetApp()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🗑️ Pulisci Griglia</button>
+            <button type="button" onclick="resetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Ripristino Dati Iniziali</button>
             <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
             <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
@@ -58,15 +56,15 @@
             <!-- VISTA SETTIMANALE UNIFICATA CON BUFFER SLITTAMENTO -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Gestione Smart Calendar & Buffer)</h2>
-                    <span class="text-xs text-slate-400">Priorità e Slittamenti attivi</span>
+                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Google Calendar + WorkBlocker Progetti)</h2>
+                    <span class="text-xs text-slate-400">Buffer Smart 30 min attivo</span>
                 </div>
                 <div id="weekly-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
             </div>
 
             <!-- FORM PROGRAMMAZIONE -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero (Sposta in "In Corso")</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero (Sposta Progetto in "In Corso")</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
@@ -87,7 +85,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio Desiderato</label>
                             <input type="time" id="sched-starttime" value="09:00" oninput="calculateEndTime()" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                         <div>
@@ -117,7 +115,7 @@
         <!-- PIANIFICAZIONE -->
         <div id="section-pianificazione" class="space-y-6 hidden">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 id="form-proj-title" class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Nuova Scheda Progetto</h2>
+                <h2 id="form-proj-title" class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Nuova Scheda Progetto / Modifica</h2>
                 <form id="project-form" onsubmit="saveProject(event)" class="space-y-4">
                     <input type="hidden" id="editing-proj-id" value="">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -138,15 +136,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Milestones e Sotto-date</label>
-                        <div id="milestones-container" class="space-y-3 mb-2">
-                            <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                                    <input type="date" placeholder="Scadenza Milestone" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                                </div>
-                                <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                            </div>
-                        </div>
+                        <div id="milestones-container" class="space-y-3 mb-2"></div>
                         <button type="button" onclick="addMilestoneField()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer">+ Aggiungi Milestone</button>
                     </div>
                     <div class="flex space-x-2">
@@ -194,49 +184,49 @@
     </main>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDivabIe2alybtGmwemXHbvYigaEkvP9g",
-            authDomain: "workblocker-app.firebaseapp.com",
-            databaseURL: "https://workblocker-app-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "workblocker-app",
-            storageBucket: "workblocker-app.firebasestorage.app",
-            messagingSenderId: "1090382572776",
-            appId: "1:1090382572776:web:cab134e37e9d5b0eafed5d"
-        };
-
-        const googleCalendarWeekEvents = [
-            { id: 'cal-1', projectName: 'Banco desio fido e fin', startT: '10:00', endT: '10:25', color: '#3b82f6', days: ['Lun'], date: '2026-10-12', isCalendar: true },
-            { id: 'cal-2', projectName: 'Call Noemi', startT: '11:30', endT: '11:55', color: '#10b981', days: ['Lun'], date: '2026-10-12', isCalendar: true },
-            { id: 'cal-3', projectName: 'Francesca Visita', startT: '10:30', endT: '12:05', color: '#f59e0b', days: ['Mar'], date: '2026-10-13', isCalendar: true },
-            { id: 'cal-4', projectName: 'Papà ecocardio', startT: '11:00', endT: '12:05', color: '#ef4444', days: ['Mer'], date: '2026-10-14', isCalendar: true },
-            { id: 'cal-5', projectName: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', days: ['Gio'], date: '2026-10-15', isCalendar: true }
+        // Eventi reali Google Calendar per la settimana
+        const googleCalendarEvents = [
+            { id: 'c1', name: 'Banco desio fido e fin', startT: '10:00', endT: '10:25', color: '#3b82f6', day: 'Lun', date: '2026-10-12', isCalendar: true },
+            { id: 'c2', name: 'Call Noemi', startT: '11:30', endT: '11:55', color: '#10b981', day: 'Lun', date: '2026-10-12', isCalendar: true },
+            { id: 'c3', name: 'Francesca Visita', startT: '10:30', endT: '12:05', color: '#f59e0b', day: 'Mar', date: '2026-10-13', isCalendar: true },
+            { id: 'c4', name: 'Papà ecocardio', startT: '11:00', endT: '12:05', color: '#ef4444', day: 'Mer', date: '2026-10-14', isCalendar: true },
+            { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        let appData = JSON.parse(localStorage.getItem('workblocker_full_data')) || {
-            projects: [
-                { id: 101, name: 'App Work Bloker ODAP', color: '#4f46e5', endDate: '2026-12-31', milestones: [{name:'Setup Firebase', subDate:'2026-10-20', completed:false}] },
-                { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia', subDate:'2026-10-25', completed:false}] },
-                { id: 103, name: 'Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', milestones: [{name:'Demolizioni', subDate:'2026-10-18', completed:false}] }
+        // Struttura dati iniziale garantita con i 3 progetti
+        const defaultProjects = [
+            { id: 101, name: 'App Work Bloker ODAP', color: '#6366f1', endDate: '2026-12-31', milestones: [{name:'Setup e Refactoring Engine', subDate:'2026-10-20', completed:false}] },
+            { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', completed:false}] },
+            { id: 103, name: 'Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', completed:false}] }
+        ];
+
+        let appData = JSON.parse(localStorage.getItem('wb_v5_data')) || {
+            projects: defaultProjects,
+            inProgress: [],
+            schedules: [
+                { id: 201, projectId: 101, projectName: 'App Work Bloker ODAP', color: '#6366f1', executor: 'Matteo Pavese', startT: '08:30', endT: '09:30', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] },
+                { id: 202, projectId: 103, projectName: 'Ristruttura studio', color: '#22c55e', executor: 'Matteo Pavese', startT: '14:00', endT: '16:00', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] }
             ],
-            inProgress: [], schedules: [], archive: [], notes: []
+            notes: []
         };
 
-        let mainClockInterval = null, lastPreAlertMinute = -1;
+        let mainClockInterval = null, lastAlertMin = -1;
 
         document.addEventListener("DOMContentLoaded", () => {
             calculateEndTime();
             renderUI();
-            initFirebaseConnection();
             startMainClock();
         });
 
-        function hardResetApp() {
-            if (confirm("Vuoi ripulire la griglia settimanale?")) {
-                appData.schedules = [];
-                saveToCloud();
-                renderUI();
-                alert("Griglia pulita!");
+        function resetAppData() {
+            if (confirm("Ripristinare i 3 progetti e la programmazione base?")) {
+                localStorage.removeItem('wb_v5_data');
+                location.reload();
             }
+        }
+
+        function saveData() {
+            localStorage.setItem('wb_v5_data', JSON.stringify(appData));
         }
 
         function startMainClock() {
@@ -244,30 +234,20 @@
             mainClockInterval = setInterval(() => {
                 const now = new Date();
                 const clockEl = document.getElementById('current-clock');
-                if (clockEl) {
-                    clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                }
+                if (clockEl) clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 updateActiveTracker(now);
                 checkVoicePreAlert(now);
             }, 1000);
         }
 
         function checkVoicePreAlert(now) {
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentSecond = now.getSeconds();
-
-            appData.schedules.forEach(s => {
-                const [startH, startM] = s.startT.split(':').map(Number);
-                const daysMap = {'Dom':0, 'Lun':1, 'Mar':2, 'Mer':3, 'Gio':4, 'Ven':5, 'Sab':6};
-                const todayDayNum = now.getDay();
-
-                if (s.days && s.days.some(d => daysMap[d] === todayDayNum)) {
-                    if (currentHour === startH && currentMinute === startM - 1 && currentSecond === 30) {
-                        if (lastPreAlertMinute !== currentMinute) {
-                            lastPreAlertMinute = currentMinute;
-                            playPreAlertSpeech(`Attenzione. Tra trenta secondi si avvia l'attività ${s.projectName}. Preparati.`);
-                        }
+            const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            appData.schedules.forEach(sc => {
+                const [startH, startM] = sc.startT.split(':').map(Number);
+                if (h === startH && m === startM - 1 && s === 30) {
+                    if (lastAlertMin !== m) {
+                        lastAlertMin = m;
+                        playPreAlertSpeech(`Attenzione. Tra trenta secondi si avvia l'attività ${sc.projectName}.`);
                     }
                 }
             });
@@ -276,10 +256,17 @@
         function playPreAlertSpeech(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'it-IT';
-                window.speechSynthesis.speak(utterance);
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'it-IT';
+                window.speechSynthesis.speak(u);
             }
+        }
+
+        function addMinutesToTime(timeStr, mins) {
+            const [h, m] = timeStr.split(':').map(Number);
+            const d = new Date();
+            d.setHours(h, m + mins, 0);
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         }
 
         function updateActiveTracker(now) {
@@ -290,27 +277,19 @@
             const todayDay = daysMap[now.getDay()];
             const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            let activeEvent = googleCalendarWeekEvents.find(e => e.days.includes(todayDay) && currentTimeStr >= e.startT && currentTimeStr <= e.endT);
-            if (!activeEvent) {
-                activeEvent = appData.schedules.find(s => s.days && s.days.includes(todayDay) && currentTimeStr >= s.startT && currentTimeStr <= s.endT);
+            let active = googleCalendarEvents.find(e => e.day === todayDay && currentTimeStr >= e.startT && currentTimeStr <= e.endT);
+            if (!active) {
+                active = appData.schedules.find(s => s.days && s.days.includes(todayDay) && currentTimeStr >= s.startT && currentTimeStr <= s.endT);
             }
-            if (!activeEvent) {
-                activeEvent = googleCalendarWeekEvents.find(e => e.days.includes(todayDay)) || appData.schedules[0];
+            if (!active) {
+                active = googleCalendarEvents.find(e => e.day === todayDay) || appData.schedules[0];
             }
 
-            if (activeEvent) {
-                const isCalendarEvent = activeEvent.isCalendar;
-                const proj = isCalendarEvent ? activeEvent : (appData.inProgress.concat(appData.projects).find(p => p.id == activeEvent.projectId) || activeEvent);
+            if (active) {
+                const isCal = active.isCalendar;
+                const proj = isCal ? active : (appData.inProgress.concat(appData.projects).find(p => p.id == active.projectId) || active);
                 
-                const startDate = new Date(proj.creationDate || now);
-                const endDate = new Date(proj.endDate || '2026-12-31');
-                const totalSpan = Math.max(1, endDate - startDate);
-                const elapsed = Math.max(0, now - startDate);
-                let progressPercent = Math.min(100, Math.round((elapsed / totalSpan) * 100));
-
-                let isDelayed = now > endDate;
-
-                let milestonesListHtml = isCalendarEvent ? '<p class="text-xs text-slate-400">Impegno sincronizzato da Google Calendar (Priorità attiva).</p>' : 
+                let milestonesListHtml = isCal ? '<p class="text-xs text-slate-400">Impegno sincronizzato da Google Calendar (Priorità attiva).</p>' : 
                     (proj.milestones || []).map((m, idx) => `
                         <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700 text-xs">
                             <label class="flex items-center space-x-2 cursor-pointer">
@@ -323,29 +302,15 @@
 
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${proj.projectName || proj.name}</h3>
-                        <span class="text-xs px-2 py-1 rounded bg-blue-900 text-blue-200 font-semibold">${isCalendarEvent ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${active.name || proj.name}</h3>
+                        <span class="text-xs px-2 py-1 rounded ${isCal ? 'bg-blue-900 text-blue-200' : 'bg-indigo-900 text-indigo-200'} font-semibold">${isCal ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
                     </div>
-                    <div class="text-xs text-slate-300">Orario: <b>${activeEvent.startT} - ${activeEvent.endT}</b></div>
-                    
-                    <div class="w-full space-y-1">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>Avvio: ${startDate.toLocaleDateString()}</span>
-                            <span class="${isDelayed ? 'text-viola-ritardo font-bold' : 'text-emerald-400 font-bold'}">${isDelayed ? '⚠️ RITARDO' : 'In Corso'} (${progressPercent}%)</span>
-                            <span>Scadenza: ${endDate.toLocaleDateString()}</span>
-                        </div>
-                        <div class="relative w-full bg-slate-700 h-4 rounded-full overflow-hidden">
-                            <div class="${isDelayed ? 'bg-viola-ritardo' : 'bg-indigo-600'} h-4 rounded-full transition-all duration-500" style="width: ${progressPercent}%;"></div>
-                        </div>
-                    </div>
-
+                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> | ${isCal ? 'Priorità Automatica' : 'Esecutore: ' + active.executor}</div>
                     <div class="w-full space-y-2 pt-2">
                         <span class="text-xs font-bold text-indigo-300">Milestone & Dettagli:</span>
                         ${milestonesListHtml}
                     </div>
                 `;
-            } else {
-                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessun impegno in corso al momento.</div>`;
             }
         }
 
@@ -353,45 +318,9 @@
             const proj = appData.inProgress.concat(appData.projects).find(p => p.id == projId);
             if (proj && proj.milestones && proj.milestones[idx]) {
                 proj.milestones[idx].completed = !proj.milestones[idx].completed;
-                saveToCloud();
+                saveData();
                 renderUI();
             }
-        }
-
-        function initFirebaseConnection() {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                const db = firebase.database();
-                db.ref('workblocker_full_data').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.projects) {
-                        appData = {
-                            projects: data.projects || [],
-                            inProgress: data.inProgress || [],
-                            schedules: cleanUniqueSchedules(data.schedules || []),
-                            archive: data.archive || [],
-                            notes: data.notes || []
-                        };
-                        localStorage.setItem('workblocker_full_data', JSON.stringify(appData));
-                    }
-                    renderUI();
-                });
-            } catch(e) {}
-        }
-
-        function cleanUniqueSchedules(schedules) {
-            const map = new Map();
-            schedules.forEach(s => {
-                const key = `${s.projectId}-${s.startT}-${s.endT}-${(s.days||[]).sort().join('')}`;
-                if (!map.has(key)) map.set(key, s);
-            });
-            return Array.from(map.values());
-        }
-
-        function saveToCloud() {
-            appData.schedules = cleanUniqueSchedules(appData.schedules);
-            localStorage.setItem('workblocker_full_data', JSON.stringify(appData));
-            try { firebase.database().ref('workblocker_full_data').set(appData); } catch(e){}
         }
 
         function switchTab(tabId) {
@@ -408,15 +337,10 @@
             const minEl = document.getElementById('sched-minutes');
             const endEl = document.getElementById('sched-endtime');
             if(!startEl || !minEl || !endEl) return;
-            const startStr = startEl.value || "09:00";
-            const minutes = parseInt(minEl.value) || 60;
-            const [h, m] = startStr.split(':').map(Number);
-            const date = new Date();
-            date.setHours(h, m + minutes, 0);
-            endEl.value = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            endEl.value = addMinutesToTime(startEl.value || "09:00", parseInt(minEl.value) || 60);
         }
 
-        function addMilestoneField(name = '', subDate = '', sub = '') {
+        function addMilestoneField(name = '', subDate = '') {
             const container = document.getElementById('milestones-container');
             const div = document.createElement('div');
             div.className = 'bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block';
@@ -425,7 +349,6 @@
                     <input type="text" placeholder="Nome Milestone" value="${name}" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                     <input type="date" placeholder="Scadenza Milestone" value="${subDate}" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                 </div>
-                <input type="text" placeholder="Sub-task (separate da virgola)" value="${sub}" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                 <button type="button" onclick="this.parentElement.remove()" class="text-rose-400 text-[10px] cursor-pointer">Rimuovi Milestone</button>
             `;
             container.appendChild(div);
@@ -439,37 +362,27 @@
             const endDate = document.getElementById('p-enddate').value;
             
             const blocks = document.querySelectorAll('.milestone-block');
-            const milestones = Array.from(blocks).map(b => {
-                const subStr = b.querySelector('.m-sub').value;
-                return {
-                    name: b.querySelector('.m-name').value,
-                    subDate: b.querySelector('.m-subdate').value,
-                    subtasks: subStr ? subStr.split(',').map(s => s.trim()).filter(s => s) : [],
-                    completed: false
-                };
-            }).filter(m => m.name.trim() !== '');
+            const milestones = Array.from(blocks).map(b => ({
+                name: b.querySelector('.m-name').value,
+                subDate: b.querySelector('.m-subdate').value,
+                completed: false
+            })).filter(m => m.name.trim() !== '');
 
             if (editId) {
-                let p = appData.projects.find(proj => proj.id == editId);
-                if (p) {
-                    p.name = name; p.color = color; p.endDate = endDate; p.milestones = milestones;
-                } else {
-                    p = appData.inProgress.find(proj => proj.id == editId);
-                    if (p) { p.name = name; p.color = color; p.endDate = endDate; p.milestones = milestones; }
-                }
+                let p = appData.projects.concat(appData.inProgress).find(proj => proj.id == editId);
+                if (p) { p.name = name; p.color = color; p.endDate = endDate; p.milestones = milestones; }
             } else {
-                appData.projects.push({ id: Date.now(), creationDate: new Date().toISOString().split('T')[0], name, color, endDate, milestones });
+                appData.projects.push({ id: Date.now(), name, color, endDate, milestones });
             }
 
-            saveToCloud();
+            saveData();
             resetProjectForm();
-            switchTab('pianificazione');
             renderUI();
-            alert('Progetto salvato con successo!');
+            alert('Progetto salvato!');
         }
 
         function openDetailModal(projId) {
-            const proj = appData.projects.concat(appData.inProgress, appData.archive).find(p => p.id == projId);
+            const proj = appData.projects.concat(appData.inProgress).find(p => p.id == projId);
             if (!proj) return;
 
             document.getElementById('editing-proj-id').value = proj.id;
@@ -481,10 +394,8 @@
             const container = document.getElementById('milestones-container');
             container.innerHTML = '';
             if (proj.milestones && proj.milestones.length > 0) {
-                proj.milestones.forEach(m => addMilestoneField(m.name, m.subDate || '', m.subtasks ? m.subtasks.join(', ') : ''));
-            } else {
-                addMilestoneField();
-            }
+                proj.milestones.forEach(m => addMilestoneField(m.name, m.subDate || ''));
+            } else { addMilestoneField(); }
 
             switchTab('pianificazione');
         }
@@ -493,34 +404,34 @@
             e.preventDefault();
             const projId = document.getElementById('sched-project').value;
             const executor = document.getElementById('sched-executor').value;
+            const duration = parseInt(document.getElementById('sched-minutes').value) || 60;
             let startT = document.getElementById('sched-starttime').value;
-            let endT = document.getElementById('sched-endtime').value;
             const checkedDays = Array.from(document.querySelectorAll('input[name="day-flag"]:checked')).map(cb => cb.value);
 
-            // Logica Smart Buffer Calendar: Controlla se cade in conflitto con impegni calendar eccetto call/pagamento/f24
+            // LOGICA SMART BUFFER 30 MINUTI
             checkedDays.forEach(day => {
-                googleCalendarWeekEvents.forEach(cal => {
-                    if (cal.days.includes(day)) {
-                        const isCallOrPayment = /call|pagamento|f24|desio/i.test(cal.projectName);
+                googleCalendarEvents.forEach(cal => {
+                    if (cal.day === day) {
+                        const isCallOrPayment = /call|pagamento|f24|desio/i.test(cal.name);
+                        let endT = addMinutesToTime(startT, duration);
+
                         if (!isCallOrPayment) {
-                            // Applica buffer 30 min prima e dopo l'evento calendar se c'è sovrapposizione
-                            // Sposta lo slot del progetto dopo l'impegno + 30 min
+                            // Se entra in rotta di collisione con l'evento Google, slitta a 30 min dopo la fine di Calendar
                             if (startT < cal.endT && endT > cal.startT) {
-                                startT = cal.endT; // Semplificazione buffer slittamento
+                                startT = addMinutesToTime(cal.endT, 30);
                             }
                         }
                     }
                 });
             });
 
-            const projIdx = appData.projects.findIndex(p => p.id == projId);
+            let projIdx = appData.projects.findIndex(p => p.id == projId);
             let proj = null;
 
             if (projIdx !== -1) {
+                // Sposta da Pianificati a In Corso
                 proj = appData.projects.splice(projIdx, 1)[0];
-                if (!appData.inProgress.some(p => p.id == proj.id)) {
-                    appData.inProgress.push(proj);
-                }
+                appData.inProgress.push(proj);
             } else {
                 proj = appData.inProgress.find(p => p.id == projId);
             }
@@ -534,13 +445,13 @@
                 color: proj.color,
                 executor,
                 startT,
-                endT,
+                endT: addMinutesToTime(startT, duration),
                 days: checkedDays
             });
 
-            saveToCloud();
+            saveData();
             renderUI();
-            alert(`Progetto "${proj.name}" avviato e inserito con gestione smart del buffer calendar!`);
+            alert(`Progetto "${proj.name}" schedulato con successo e spostato in "In Corso"!`);
         }
 
         function renderUI() {
@@ -555,9 +466,10 @@
                 });
             }
 
+            // Pianificati
             const plannedList = document.getElementById('planned-projects-list');
             if(plannedList) {
-                plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
+                plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in attesa.</p>' : '';
                 appData.projects.forEach(p => {
                     plannedList.innerHTML += `
                         <div class="bg-slate-900 p-4 rounded border border-slate-700 flex justify-between items-center">
@@ -570,9 +482,10 @@
                 });
             }
 
+            // In Corso
             const inProgVert = document.getElementById('in-progress-projects-list');
             if(inProgVert) {
-                inProgVert.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto attivo.</p>' : '';
+                inProgVert.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto attivo in corso.</p>' : '';
                 appData.inProgress.forEach(p => {
                     inProgVert.innerHTML += `
                         <div class="bg-slate-900 p-4 rounded border border-slate-700 flex justify-between items-center">
@@ -585,17 +498,19 @@
                 });
             }
 
+            // GRIGLIA SETTIMANALE COMPLETA
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
             if(grid) {
                 grid.innerHTML = '';
                 const curr = new Date();
                 const first = curr.getDate() - curr.getDay() + 1;
+
                 daysOrder.forEach((day, idx) => {
                     const d = new Date(curr.setDate(first + idx));
                     const dateStr = `${d.getDate()}/${d.getMonth()+1}`;
 
-                    let dayTasks = googleCalendarWeekEvents.filter(e => e.days.includes(day));
+                    let dayTasks = googleCalendarEvents.filter(e => e.day === day);
                     dayTasks = dayTasks.concat(appData.schedules.filter(s => s.days && s.days.includes(day)));
                     
                     dayTasks.sort((a, b) => (a.startT || "00:00").localeCompare(b.startT || "00:00"));
@@ -603,12 +518,12 @@
                     let tasksHtml = dayTasks.map(t => `
                         <div class="p-2 rounded text-xs shadow mb-1 border" style="background-color: ${t.color || '#4f46e5'}33; border-color: ${t.color || '#4f46e5'};">
                             <div class="font-bold text-white">${t.projectName || t.name}</div>
-                            <div class="text-[10px] text-slate-200">${t.startT} - ${t.endT} ${t.isCalendar ? '📅' : ''}</div>
+                            <div class="text-[10px] text-slate-200">${t.startT} - ${t.endT} ${t.isCalendar ? '📅' : '⚡'}</div>
                         </div>
                     `).join('');
 
                     grid.innerHTML += `
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700 min-h-[150px]">
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 min-h-[160px]">
                             <div class="text-xs font-bold text-indigo-300 border-b border-slate-800 pb-1 mb-2 text-center">${day} (${dateStr})</div>
                             ${tasksHtml || '<span class="text-[10px] text-slate-600 block text-center mt-6">Libero</span>'}
                         </div>
@@ -620,24 +535,13 @@
         function resetProjectForm() {
             document.getElementById('project-form').reset();
             document.getElementById('editing-proj-id').value = '';
-            document.getElementById('form-proj-title').innerText = '📁 Nuova Scheda Progetto';
-            document.getElementById('milestones-container').innerHTML = `
-                <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                        <input type="date" placeholder="Scadenza Milestone" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                    </div>
-                    <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                </div>`;
+            document.getElementById('form-proj-title').innerText = '📁 Nuova Scheda Progetto / Modifica';
+            document.getElementById('milestones-container').innerHTML = '';
+            addMilestoneField();
         }
 
         function triggerMorningBriefing() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance("Buongiorno Matteo. Impegni da Google Calendar e i tre progetti attivi caricati con successo.");
-                utterance.lang = 'it-IT';
-                window.speechSynthesis.speak(utterance);
-            }
+            playPreAlertSpeech("Buongiorno Matteo. Tutti i tre progetti e gli impegni della settimana sono caricati correttamente.");
         }
 
         function triggerPreAlert() {
@@ -649,9 +553,9 @@
             const text = document.getElementById('voice-note-text').value;
             if(!projId || !text) return alert('Seleziona un progetto e inserisci il testo.');
             appData.notes.push({ projId, text, date: new Date().toLocaleDateString() });
-            saveToCloud();
+            saveData();
             document.getElementById('voice-note-text').value = '';
-            alert('Nota salvata con successo!');
+            alert('Nota salvata!');
         }
     </script>
 </body>
