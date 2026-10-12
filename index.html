@@ -25,7 +25,7 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-yellow-600 text-white font-medium">Connessione...</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Modalità Pronta</span>
         </div>
         <div class="flex items-center space-x-2">
             <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
@@ -45,7 +45,7 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto p-4 space-y-6">
         
-        <!-- DASHBOARD -->
+        <!-- DASHBOARD SETTIMANALE -->
         <div id="section-dashboard" class="space-y-6">
             
             <!-- Calendario Settimanale Orizzontale (Lun-Dom con date) -->
@@ -261,13 +261,7 @@
             appId: "1:1090382572776:web:cab134e37e9d5b0eafed5d"
         };
 
-        let db = null;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-        } catch(e) { console.error(e); }
-
-        // Dati di default con 3 progetti di test realistici
+        // Dati di default
         let defaultData = {
             projects: [
                 {
@@ -310,8 +304,8 @@
                     projectName: "Ristrutturazione Villa Roma",
                     color: "#4f46e5",
                     executor: "Matteo Pavese",
-                    minutes: 120,
-                    timeframe: "09:00 - 11:00",
+                    minutes: 60,
+                    timeframe: "09:00 - 10:00",
                     days: ["Lun", "Mer", "Ven"],
                     startDate: "2026-05-01",
                     endDate: "2026-07-30",
@@ -325,39 +319,52 @@
         let appData = JSON.parse(localStorage.getItem('workblocker_local_data')) || defaultData;
         let remainingSeconds = 0, totalTaskSeconds = 0, isPaused = false, pauseStartTime = null, totalLostSeconds = 0, lostTimerInterval = null, currentActiveSchedule = null;
 
-        if (db) {
-            db.ref('workblocker_data').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    appData = {
-                        projects: data.projects || defaultData.projects,
-                        inProgress: data.inProgress || [],
-                        schedules: data.schedules || defaultData.schedules,
-                        archive: data.archive || [],
-                        notes: data.notes || []
-                    };
-                    localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
-                }
-                updateSyncStatus(true);
-                renderUI();
-            }, (err) => {
-                updateSyncStatus(false);
-                renderUI();
-            });
-        } else {
-            updateSyncStatus(false);
+        // Esecuzione immediata al caricamento del DOM
+        document.addEventListener("DOMContentLoaded", () => {
+            calculateEndTime();
             renderUI();
+            initFirebaseConnection();
+        });
+
+        function initFirebaseConnection() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                const db = firebase.database();
+                db.ref('workblocker_data').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        appData = {
+                            projects: data.projects || defaultData.projects,
+                            inProgress: data.inProgress || [],
+                            schedules: data.schedules || defaultData.schedules,
+                            archive: data.archive || [],
+                            notes: data.notes || []
+                        };
+                        localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
+                    }
+                    updateSyncStatus(true);
+                    renderUI();
+                }, (err) => {
+                    updateSyncStatus(false);
+                });
+            } catch(e) {
+                updateSyncStatus(false);
+            }
         }
 
         function updateSyncStatus(connected) {
             const statusEl = document.getElementById('sync-status');
-            statusEl.innerText = connected ? 'Cloud Sincronizzato' : 'Modalità Locale';
-            statusEl.className = connected ? 'text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium' : 'text-[10px] md:text-xs px-2 py-1 rounded bg-amber-600 text-white font-medium';
+            if(statusEl) {
+                statusEl.innerText = connected ? 'Cloud Sincronizzato' : 'Modalità Locale Attiva';
+                statusEl.className = connected ? 'text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium' : 'text-[10px] md:text-xs px-2 py-1 rounded bg-amber-600 text-white font-medium';
+            }
         }
 
         function saveToCloud() {
             localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
-            if (db) db.ref('workblocker_data').set(appData);
+            try {
+                firebase.database().ref('workblocker_data').set(appData);
+            } catch(e){}
         }
 
         function switchTab(tabId) {
@@ -370,15 +377,19 @@
         }
 
         function calculateEndTime() {
-            const startStr = document.getElementById('sched-starttime').value;
-            const minutes = parseInt(document.getElementById('sched-minutes').value) || 60;
-            if (!startStr) return;
+            const startEl = document.getElementById('sched-starttime');
+            const minEl = document.getElementById('sched-minutes');
+            const endEl = document.getElementById('sched-endtime');
+            if(!startEl || !minEl || !endEl) return;
+
+            const startStr = startEl.value || "09:00";
+            const minutes = parseInt(minEl.value) || 60;
             const [h, m] = startStr.split(':').map(Number);
             const date = new Date();
             date.setHours(h, m + minutes, 0);
             const endH = String(date.getHours()).padStart(2, '0');
             const endM = String(date.getMinutes()).padStart(2, '0');
-            document.getElementById('sched-endtime').value = `${endH}:${endM}`;
+            endEl.value = `${endH}:${endM}`;
         }
 
         function addMilestoneField(name = '', subDate = '', sub = '') {
@@ -416,7 +427,6 @@
             if (editId) {
                 const idx = appData.projects.findIndex(p => p.id == editId);
                 if (idx !== -1) appData.projects[idx] = { ...appData.projects[idx], name, color, endDate, link, milestones };
-                // Aggiorna anche se è in corso
                 const idxInProg = appData.inProgress.findIndex(p => p.id == editId);
                 if (idxInProg !== -1) appData.inProgress[idxInProg] = { ...appData.inProgress[idxInProg], name, color, endDate, link, milestones };
             } else {
@@ -591,83 +601,91 @@
             // Dropdown Progetti
             const projSelect = document.getElementById('sched-project');
             const noteSelect = document.getElementById('note-project-select');
-            projSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
-            noteSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
+            if(projSelect && noteSelect) {
+                projSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
+                noteSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
 
-            appData.projects.concat(appData.inProgress).forEach(p => {
-                projSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-                noteSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
+                appData.projects.concat(appData.inProgress).forEach(p => {
+                    projSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                    noteSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
+            }
 
             // Pianificati
             const plannedList = document.getElementById('planned-projects-list');
-            plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
-            appData.projects.forEach(p => {
-                plannedList.innerHTML += `
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2 cursor-pointer hover:border-indigo-500" onclick="openDetailModal(${p.id})">
-                        <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
-                        <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
-                    </div>
-                `;
-            });
+            if(plannedList) {
+                plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
+                appData.projects.forEach(p => {
+                    plannedList.innerHTML += `
+                        <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2 cursor-pointer hover:border-indigo-500" onclick="openDetailModal(${p.id})">
+                            <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
+                            <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
+                        </div>
+                    `;
+                });
+            }
 
             // In Corso (Orizzontale)
             const inProgHoriz = document.getElementById('horizontal-in-progress-list');
             const inProgVert = document.getElementById('in-progress-projects-list');
-            inProgHoriz.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in corso.</p>' : '';
-            inProgVert.innerHTML = inProgHoriz.innerHTML;
+            if(inProgHoriz && inProgVert) {
+                inProgHoriz.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in corso.</p>' : '';
+                inProgVert.innerHTML = inProgHoriz.innerHTML;
 
-            appData.inProgress.forEach(p => {
-                const cardHtml = `
-                    <div onclick="openDetailModal(${p.id})" class="bg-slate-900 p-4 rounded border border-slate-700 hover:border-indigo-500 cursor-pointer space-y-2 shadow">
-                        <span class="font-bold text-sm block" style="color: ${p.color}">${p.name}</span>
-                        <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
-                        <span class="text-[10px] bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800">Clicca per modificare</span>
-                    </div>
-                `;
-                inProgHoriz.innerHTML += cardHtml;
-                inProgVert.innerHTML += cardHtml;
-            });
+                appData.inProgress.forEach(p => {
+                    const cardHtml = `
+                        <div onclick="openDetailModal(${p.id})" class="bg-slate-900 p-4 rounded border border-slate-700 hover:border-indigo-500 cursor-pointer space-y-2 shadow">
+                            <span class="font-bold text-sm block" style="color: ${p.color}">${p.name}</span>
+                            <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
+                            <span class="text-[10px] bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800">Clicca per modificare</span>
+                        </div>
+                    `;
+                    inProgHoriz.innerHTML += cardHtml;
+                    inProgVert.innerHTML += cardHtml;
+                });
+            }
 
             // Calendario Settimanale (Lun-Dom con date trasparenti colorate)
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
-            grid.innerHTML = '';
+            if(grid) {
+                grid.innerHTML = '';
+                const curr = new Date();
+                const first = curr.getDate() - curr.getDay() + 1;
+                daysOrder.forEach((day, idx) => {
+                    const d = new Date(curr.setDate(first + idx));
+                    const dateStr = `${d.getDate()}/${d.getMonth()+1}`;
 
-            // Calcolo date della settimana corrente
-            const curr = new Date();
-            const first = curr.getDate() - curr.getDay() + 1; // Lunedì
-            daysOrder.forEach((day, idx) => {
-                const d = new Date(curr.setDate(first + idx));
-                const dateStr = `${d.getDate()}/${d.getMonth()+1}`;
+                    let dayTasks = appData.schedules.filter(s => s.days && s.days.includes(day));
+                    let tasksHtml = dayTasks.map(t => `
+                        <div onclick="openDetailModal(${t.projectId})" class="p-2 rounded text-xs cursor-pointer shadow mb-1 border" style="background-color: ${t.color}33; border-color: ${t.color};">
+                            <div class="font-bold text-white">${t.projectName}</div>
+                            <div class="text-[10px] text-slate-200">${t.timeframe || ''}</div>
+                        </div>
+                    `).join('');
 
-                let dayTasks = appData.schedules.filter(s => s.days && s.days.includes(day));
-                let tasksHtml = dayTasks.map(t => `
-                    <div onclick="openDetailModal(${t.projectId})" class="p-2 rounded text-xs cursor-pointer shadow mb-1 border" style="background-color: ${t.color}33; border-color: ${t.color};">
-                        <div class="font-bold text-white">${t.projectName}</div>
-                        <div class="text-[10px] text-slate-200">${t.timeframe || ''}</div>
-                    </div>
-                `).join('');
-
-                grid.innerHTML += `
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 min-h-[140px]">
-                        <div class="text-xs font-bold text-indigo-300 border-b border-slate-800 pb-1 mb-2 text-center">${day} (${dateStr})</div>
-                        ${tasksHtml || '<span class="text-[10px] text-slate-600 block text-center mt-6">Libero</span>'}
-                    </div>
-                `;
-            });
+                    grid.innerHTML += `
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 min-h-[140px]">
+                            <div class="text-xs font-bold text-indigo-300 border-b border-slate-800 pb-1 mb-2 text-center">${day} (${dateStr})</div>
+                            ${tasksHtml || '<span class="text-[10px] text-slate-600 block text-center mt-6">Libero</span>'}
+                        </div>
+                    `;
+                });
+            }
 
             // Archivio
             const archList = document.getElementById('archive-list');
-            archList.innerHTML = appData.archive.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto archiviato.</p>' : '';
-            appData.archive.forEach(a => {
-                archList.innerHTML += `
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-1">
-                        <span class="font-bold text-sm" style="color: ${a.color}">${a.projectName}</span>
-                        <p class="text-xs text-slate-400">Completato il: ${a.completedAt}</p>
-                    </div>
-                `;
-            });
+            if(archList) {
+                archList.innerHTML = appData.archive.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto archiviato.</p>' : '';
+                appData.archive.forEach(a => {
+                    archList.innerHTML += `
+                        <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-1">
+                            <span class="font-bold text-sm" style="color: ${a.color}">${a.projectName}</span>
+                            <p class="text-xs text-slate-400">Completato il: ${a.completedAt}</p>
+                        </div>
+                    `;
+                });
+            }
         }
 
         function openDetailModal(projId) {
@@ -752,13 +770,10 @@
             if(!projId || !text) return alert('Seleziona un progetto e inserisci il testo.');
             appData.notes.push({ projId, text, date: new Date().toLocaleDateString() });
             saveToCloud();
-            document.getElementById('voice-note-text'].value = '';
+            document.getElementById('voice-note-text').value = '';
             renderUI();
             alert('Nota vocale salvata!');
         }
-
-        // Calcolo orario fine iniziale
-        calculateEndTime();
     </script>
 </body>
 </html>
