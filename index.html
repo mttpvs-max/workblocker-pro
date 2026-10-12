@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Final Stable Engine</title>
+    <title>WorkBlocker PRO - Final Certified Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-viola-ritardo { background-color: #8b5cf6 !important; }
@@ -17,10 +17,10 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile & Certificato</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="resetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Ripristina Dati Iniziali</button>
+            <button type="button" onclick="resetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Reset e Ricarica Dati</button>
             <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
             <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
@@ -41,7 +41,7 @@
         <!-- DASHBOARD -->
         <div id="section-dashboard" class="space-y-6">
 
-            <!-- MONITORAGGIO ATTIVITÀ & GOOGLE CALENDAR (ORA CORRETTA) -->
+            <!-- MONITORAGGIO ATTIVITÀ & GOOGLE CALENDAR -->
             <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div class="flex items-center space-x-2">
@@ -57,7 +57,7 @@
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Google Calendar + Progetti WorkBlocker)</h2>
-                    <span class="text-xs text-slate-400">Aggiornata e sincronizzata</span>
+                    <span class="text-xs text-slate-400">Sincronizzazione attiva</span>
                 </div>
                 <div id="weekly-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
             </div>
@@ -198,7 +198,7 @@
             { id: 103, name: 'Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', completed:false}] }
         ];
 
-        let appData = JSON.parse(localStorage.getItem('wb_v6_data')) || {
+        let appData = JSON.parse(localStorage.getItem('wb_v7_data')) || {
             projects: defaultProjects,
             inProgress: [],
             schedules: [
@@ -217,14 +217,14 @@
         });
 
         function resetAppData() {
-            if (confirm("Ripristinare i dati iniziali dei progetti?")) {
-                localStorage.removeItem('wb_v6_data');
+            if (confirm("Ripristinare i dati iniziali dei progetti e della programmazione?")) {
+                localStorage.removeItem('wb_v7_data');
                 location.reload();
             }
         }
 
         function saveData() {
-            localStorage.setItem('wb_v6_data', JSON.stringify(appData));
+            localStorage.setItem('wb_v7_data', JSON.stringify(appData));
         }
 
         function startMainClock() {
@@ -275,16 +275,19 @@
             const todayDay = daysMap[now.getDay()];
             const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // Cerca prima un evento in corso EFFETTIVO (ora corrente inclusa tra startT ed endT)
+            // 1. Cerca se c'è un evento in corso proprio adesso
             let active = googleCalendarEvents.find(e => e.day === todayDay && currentTimeStr >= e.startT && currentTimeStr <= e.endT);
             if (!active) {
                 active = appData.schedules.find(s => s.days && s.days.includes(todayDay) && currentTimeStr >= s.startT && currentTimeStr <= s.endT);
             }
-            // Se non c'è nulla in corso adesso, cerca il PROSSIMO evento della giornata
+
+            // 2. Se nulla è in corso adesso, mostra il PROSSIMO evento della giornata (senza mostrare eventi passati)
+            let isRunningNow = true;
             if (!active) {
+                isRunningNow = false;
                 const todayEvents = googleCalendarEvents.filter(e => e.day === todayDay).concat(appData.schedules.filter(s => s.days && s.days.includes(todayDay)));
                 todayEvents.sort((a, b) => a.startT.localeCompare(b.startT));
-                active = todayEvents.find(e => e.startT > currentTimeStr) || todayEvents[0];
+                active = todayEvents.find(e => e.startT > currentTimeStr);
             }
 
             if (active) {
@@ -302,21 +305,19 @@
                         </div>
                     `).join('');
 
-                const isRunningNow = currentTimeStr >= active.startT && currentTimeStr <= active.endT;
-
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${active.name || proj.name}</h3>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${active.name || proj.projectName || proj.name}</h3>
                         <span class="text-xs px-2 py-1 rounded ${isCal ? 'bg-blue-900 text-blue-200' : 'bg-indigo-900 text-indigo-200'} font-semibold">${isCal ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
                     </div>
-                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO' : '⏳ PROSSIMO'}) | ${isCal ? 'Priorità Automatica' : 'Esecutore: ' + (active.executor || 'Matteo')}</div>
+                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO' : '⏳ PROSSIMO IN PROGRAMMA'})</div>
                     <div class="w-full space-y-2 pt-2">
                         <span class="text-xs font-bold text-indigo-300">Milestone & Dettagli:</span>
                         ${milestonesListHtml}
                     </div>
                 `;
             } else {
-                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessuna attività programmata per oggi.</div>`;
+                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessuna attività o impegno programmato per il resto della giornata.</div>`;
             }
         }
 
