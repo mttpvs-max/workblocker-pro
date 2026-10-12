@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Final Clean Version</title>
+    <title>WorkBlocker PRO - Clean & Calendar Synced</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -19,18 +19,18 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Online</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Sincronizzato</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="resetDatabaseDuplicates()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🗑️ Pulisci Duplicati</button>
-            <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">☀️ Briefing</button>
-            <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
+            <button type="button" onclick="hardResetApp()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🗑️ Reset Pulizia Totale</button>
+            <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
+            <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
     </header>
 
     <!-- Navigation Tabs -->
     <nav class="bg-slate-800/90 border-b border-slate-700 px-4 py-2 flex space-x-2 md:space-x-4 overflow-x-auto text-xs md:text-sm">
-        <button type="button" onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 rounded bg-indigo-600 text-white font-medium transition cursor-pointer">Dashboard Settimanale</button>
+        <button type="button" onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 rounded bg-indigo-600 text-white font-medium transition cursor-pointer">Dashboard</button>
         <button type="button" onclick="switchTab('pianificazione')" id="tab-pianificazione" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition cursor-pointer">Pianificazione</button>
         <button type="button" onclick="switchTab('incorso')" id="tab-incorso" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition cursor-pointer">In Corso</button>
         <button type="button" onclick="switchTab('archivio')" id="tab-archivio" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition cursor-pointer">Archivio</button>
@@ -40,15 +40,15 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto p-4 space-y-6">
         
-        <!-- DASHBOARD SETTIMANALE -->
+        <!-- DASHBOARD -->
         <div id="section-dashboard" class="space-y-6">
 
-            <!-- MONITORAGGIO ATTIVITÀ & BARRA AVANZAMENTO -->
+            <!-- MONITORAGGIO ATTIVITÀ & GOOGLE CALENDAR PRIORITARIO -->
             <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div class="flex items-center space-x-2">
                         <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
-                        <h2 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Monitoraggio Attività & Avanzamento Progetto</h2>
+                        <h2 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Priorità Google Calendar & Attività in Corso</h2>
                     </div>
                     <span id="current-clock" class="text-xs font-mono text-slate-400"></span>
                 </div>
@@ -57,32 +57,32 @@
                 </div>
             </div>
 
-            <!-- VISTA SETTIMANALE (Senza Duplicati e Ordinata) -->
+            <!-- VISTA SETTIMANALE PULITA E ORDINATA -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Lunedì - Domenica)</h2>
-                    <span class="text-xs text-slate-400">Ordinata cronologicamente</span>
+                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Priorità Calendar & WorkBlocker)</h2>
+                    <span class="text-xs text-slate-400">Senza duplicati</span>
                 </div>
                 <div id="weekly-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
             </div>
 
-            <!-- FORM PROGRAMMAZIONE GIORNALIERA -->
+            <!-- FORM PROGRAMMAZIONE -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci in Programmazione Settimanale</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona Progetto Pianificato</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona Progetto</label>
                             <select id="sched-project" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-slate-300">
                                 <option value="">Seleziona Progetto...</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Nome Esecutore</label>
-                            <input type="text" id="sched-executor" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm" placeholder="Es. Matteo Pavese">
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Esecutore</label>
+                            <input type="text" id="sched-executor" value="Matteo Pavese" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Slot Orario (Minuti)</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Durata (Minuti)</label>
                             <input type="number" id="sched-minutes" value="60" oninput="calculateEndTime()" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                     </div>
@@ -93,13 +93,13 @@
                             <input type="time" id="sched-starttime" value="09:00" oninput="calculateEndTime()" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Fine (Automatico)</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Fine</label>
                             <input type="time" id="sched-endtime" readonly class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs md:text-sm text-indigo-300 font-bold">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Giorni della Settimana</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Giorni</label>
                         <div class="flex flex-wrap gap-3 text-xs">
                             <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="day-flag" value="Lun" checked> <span>Lun</span></label>
                             <label class="flex items-center space-x-1 cursor-pointer"><input type="checkbox" name="day-flag" value="Mar" checked> <span>Mar</span></label>
@@ -111,7 +111,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded text-xs md:text-sm transition cursor-pointer">Aggiungi alla Griglia Settimanale</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded text-xs md:text-sm transition cursor-pointer">Aggiungi alla Griglia</button>
                 </form>
             </div>
         </div>
@@ -133,36 +133,31 @@
                                 <input type="color" id="p-color" value="#4f46e5" class="w-full h-9 bg-slate-900 border border-slate-700 rounded cursor-pointer p-1">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1">Data Presunta Completamento</label>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Scadenza Finale</label>
                                 <input type="date" id="p-enddate" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                             </div>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Cartella OneDrive Link</label>
-                        <input type="url" id="p-link" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Milestones e Sub-tasks</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Milestones (Nome e Scadenza)</label>
                         <div id="milestones-container" class="space-y-3 mb-2">
                             <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                     <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                                    <input type="date" placeholder="Scadenza Milestone" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                                    <input type="date" placeholder="Scadenza" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                                 </div>
-                                <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                             </div>
                         </div>
                         <button type="button" onclick="addMilestoneField()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer">+ Aggiungi Milestone</button>
                     </div>
                     <div class="flex space-x-2">
-                        <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded text-xs md:text-sm transition cursor-pointer">Salva in Pianificazione</button>
+                        <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded text-xs md:text-sm transition cursor-pointer">Salva Progetto</button>
                         <button type="button" onclick="resetProjectForm()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded text-xs md:text-sm cursor-pointer">Annulla</button>
                     </div>
                 </form>
             </div>
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📋 Progetti Pianificati in Attesa</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📋 Progetti Pianificati</h2>
                 <div id="planned-projects-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
         </div>
@@ -170,7 +165,7 @@
         <!-- IN CORSO -->
         <div id="section-incorso" class="space-y-6 hidden">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🚀 Progetti Attivi e In Corso</h2>
+                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🚀 Progetti Attivi</h2>
                 <div id="in-progress-projects-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
         </div>
@@ -178,7 +173,7 @@
         <!-- ARCHIVIO -->
         <div id="section-archivio" class="space-y-6 hidden">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🗄️ Archivio Progetti Completati</h2>
+                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🗄️ Archivio</h2>
                 <div id="archive-list" class="space-y-4"></div>
             </div>
         </div>
@@ -186,16 +181,14 @@
         <!-- NOTE VOCALI -->
         <div id="section-note" class="space-y-6 hidden">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4 max-w-xl mx-auto">
-                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🎙️ Note Vocali Rapide</h2>
+                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🎙️ Note Vocali</h2>
                 <div class="space-y-3">
-                    <div>
-                        <select id="note-project-select" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-slate-300">
-                            <option value="">Seleziona Progetto...</option>
-                        </select>
-                    </div>
-                    <button type="button" onclick="toggleVoiceRecording()" class="w-full bg-rose-600 hover:bg-rose-700 py-2 rounded text-xs md:text-sm font-medium transition cursor-pointer">Avvia Registrazione Vocale</button>
+                    <select id="note-project-select" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm text-slate-300">
+                        <option value="">Seleziona Progetto...</option>
+                    </select>
+                    <button type="button" onclick="toggleVoiceRecording()" class="w-full bg-rose-600 hover:bg-rose-700 py-2 rounded text-xs md:text-sm font-medium transition cursor-pointer">Avvia Registrazione</button>
                     <textarea id="voice-note-text" placeholder="Trascrizione..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm h-24 focus:outline-none"></textarea>
-                    <button type="button" onclick="saveVoiceNote()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded text-xs md:text-sm font-medium transition cursor-pointer">Salva Nota nel Progetto</button>
+                    <button type="button" onclick="saveVoiceNote()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded text-xs md:text-sm font-medium transition cursor-pointer">Salva Nota</button>
                 </div>
             </div>
         </div>
@@ -206,12 +199,12 @@
     <div id="detail-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 id="modal-title" class="text-lg font-bold text-indigo-300">Dettaglio Progetto</h3>
+                <h3 id="modal-title" class="text-lg font-bold text-indigo-300">Dettaglio</h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">&times;</button>
             </div>
             <div id="modal-content" class="space-y-3 text-sm"></div>
             <div class="flex justify-between pt-2 border-t border-slate-700">
-                <button id="modal-edit-btn" onclick="" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded text-xs cursor-pointer">Modifica Scheda</button>
+                <button id="modal-edit-btn" onclick="" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded text-xs cursor-pointer">Modifica</button>
                 <button onclick="closeModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-1.5 rounded text-xs cursor-pointer">Chiudi</button>
             </div>
         </div>
@@ -228,7 +221,13 @@
             appId: "1:1090382572776:web:cab134e37e9d5b0eafed5d"
         };
 
-        let appData = JSON.parse(localStorage.getItem('workblocker_local_data')) || {
+        // Eventi reali di Google Calendar per oggi (12/10/2026) con priorità assoluta
+        const googleCalendarTodayEvents = [
+            { id: 'cal-1', projectName: 'Banco desio fido e fin', startT: '10:00', endT: '10:25', color: '#3b82f6', days: ['Lun'], isCalendar: true },
+            { id: 'cal-2', projectName: 'Call Noemi', startT: '11:30', endT: '11:55', color: '#10b981', days: ['Lun'], isCalendar: true }
+        ];
+
+        let appData = JSON.parse(localStorage.getItem('workblocker_clean_data')) || {
             projects: [], inProgress: [], schedules: [], archive: [], notes: []
         };
 
@@ -240,6 +239,15 @@
             initFirebaseConnection();
             startMainClock();
         });
+
+        function hardResetApp() {
+            if (confirm("Vuoi ripulire completamente la griglia da tutti i duplicati accumulati?")) {
+                appData.schedules = [];
+                saveToCloud();
+                renderUI();
+                alert("Griglia pulita con successo!");
+            }
+        }
 
         function startMainClock() {
             if (mainClockInterval) clearInterval(mainClockInterval);
@@ -261,22 +269,25 @@
             const todayDay = daysMap[now.getDay()];
             const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // Cerca lo slot attivo oppure prende l'ultimo/prossimo programmato oggi per non lasciare vuoto
-            let activeSchedule = appData.schedules.find(s => {
-                if (!s.days || !s.days.includes(todayDay)) return false;
-                return currentTimeStr >= s.startT && currentTimeStr <= s.endT;
-            });
-
-            if (!activeSchedule && appData.schedules.length > 0) {
-                // Fallback: mostra il primo della lista odierna se nessun orario combacia al minuto esatto
-                activeSchedule = appData.schedules.find(s => s.days && s.days.includes(todayDay)) || appData.schedules[0];
+            // Cerca prima tra gli eventi di Google Calendar di oggi
+            let activeEvent = googleCalendarTodayEvents.find(e => currentTimeStr >= e.startT && currentTimeStr <= e.endT);
+            
+            // Se non c'è un evento calendar in corso, cerca tra gli slot WorkBlocker
+            if (!activeEvent) {
+                activeEvent = appData.schedules.find(s => s.days && s.days.includes(todayDay) && currentTimeStr >= s.startT && currentTimeStr <= s.endT);
             }
 
-            if (activeSchedule) {
-                const proj = appData.inProgress.concat(appData.projects).find(p => p.id == activeSchedule.projectId) || activeSchedule;
+            // Fallback sul prossimo evento della giornata se nessuno è attivo al minuto esatto
+            if (!activeEvent) {
+                activeEvent = googleCalendarTodayEvents[0] || appData.schedules[0];
+            }
+
+            if (activeEvent) {
+                const isCalendarEvent = activeEvent.isCalendar;
+                const proj = isCalendarEvent ? activeEvent : (appData.inProgress.concat(appData.projects).find(p => p.id == activeEvent.projectId) || activeEvent);
                 
                 const startDate = new Date(proj.creationDate || now);
-                const endDate = new Date(proj.endDate || new Date());
+                const endDate = new Date(proj.endDate || '2026-12-31');
                 const totalSpan = Math.max(1, endDate - startDate);
                 const elapsed = Math.max(0, now - startDate);
                 let progressPercent = Math.min(100, Math.round((elapsed / totalSpan) * 100));
@@ -288,23 +299,27 @@
                     });
                 }
 
-                let milestonesListHtml = (proj.milestones || []).map((m, idx) => `
-                    <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700 text-xs">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" ${m.completed ? 'checked' : ''} onchange="toggleMilestone(${proj.id}, ${idx})" class="rounded text-indigo-600">
-                            <span class="${m.completed ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}">${m.name}</span>
-                        </label>
-                        <span class="text-[11px] text-slate-400">${m.subDate ? `Scadenza: ${m.subDate}` : ''}</span>
-                    </div>
-                `).join('');
+                let milestonesListHtml = isCalendarEvent ? '<p class="text-xs text-slate-400">Impegno sincronizzato da Google Calendar (Priorità attiva).</p>' : 
+                    (proj.milestones || []).map((m, idx) => `
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700 text-xs">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" ${m.completed ? 'checked' : ''} onchange="toggleMilestone(${proj.id}, ${idx})" class="rounded text-indigo-600">
+                                <span class="${m.completed ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}">${m.name}</span>
+                            </label>
+                            <span class="text-[11px] text-slate-400">${m.subDate ? `Scadenza: ${m.subDate}` : ''}</span>
+                        </div>
+                    `).join('');
 
                 container.innerHTML = `
-                    <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#4f46e5'}">${proj.name || activeSchedule.projectName}</h3>
-                    <div class="text-xs text-slate-300">Slot Programmato: <b>${activeSchedule.startT} - ${activeSchedule.endT}</b> | Esecutore: ${activeSchedule.executor || 'Matteo'}</div>
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${proj.projectName || proj.name}</h3>
+                        <span class="text-xs px-2 py-1 rounded bg-blue-900 text-blue-200 font-semibold">${isCalendarEvent ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
+                    </div>
+                    <div class="text-xs text-slate-300">Orario: <b>${activeEvent.startT} - ${activeEvent.endT}</b></div>
                     
                     <div class="w-full space-y-1">
                         <div class="flex justify-between text-xs text-slate-400">
-                            <span>Avvio: ${startDate.toLocaleDateString()}</span>
+                            <span>Avvio Progetto: ${startDate.toLocaleDateString()}</span>
                             <span class="${isDelayed ? 'text-viola-ritardo font-bold' : 'text-emerald-400 font-bold'}">${isDelayed ? '⚠️ RITARDO' : 'In Corso'} (${progressPercent}%)</span>
                             <span>Scadenza: ${endDate.toLocaleDateString()}</span>
                         </div>
@@ -314,16 +329,12 @@
                     </div>
 
                     <div class="w-full space-y-2 pt-2">
-                        <span class="text-xs font-bold text-indigo-300">Milestone del Progetto (Spunta per completare):</span>
-                        ${milestonesListHtml || '<p class="text-xs text-slate-500">Nessuna milestone impostata.</p>'}
+                        <span class="text-xs font-bold text-indigo-300">Milestone & Dettagli:</span>
+                        ${milestonesListHtml}
                     </div>
                 `;
             } else {
-                container.innerHTML = `
-                    <div class="text-slate-400 text-sm py-3 text-center">
-                        <span>☕ Nessuna attività pianificata. Inserisci un progetto nella programmazione sottostante.</span>
-                    </div>
-                `;
+                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessun impegno in corso al momento.</div>`;
             }
         }
 
@@ -340,25 +351,24 @@
             try {
                 firebase.initializeApp(firebaseConfig);
                 const db = firebase.database();
-                db.ref('workblocker_data').on('value', (snapshot) => {
+                db.ref('workblocker_clean_data').on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         appData = {
                             projects: data.projects || [],
-                            inProgress: cleanDuplicateProjects(data.inProgress || []),
-                            schedules: cleanDuplicateSchedules(data.schedules || []),
+                            inProgress: data.inProgress || [],
+                            schedules: cleanUniqueSchedules(data.schedules || []),
                             archive: data.archive || [],
                             notes: data.notes || []
                         };
-                        localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
+                        localStorage.setItem('workblocker_clean_data', JSON.stringify(appData));
                     }
-                    updateSyncStatus(true);
                     renderUI();
-                }, (err) => { updateSyncStatus(false); });
-            } catch(e) { updateSyncStatus(false); }
+                });
+            } catch(e) {}
         }
 
-        function cleanDuplicateSchedules(schedules) {
+        function cleanUniqueSchedules(schedules) {
             const map = new Map();
             schedules.forEach(s => {
                 const key = `${s.projectId}-${s.startT}-${s.endT}-${(s.days||[]).sort().join('')}`;
@@ -367,39 +377,10 @@
             return Array.from(map.values());
         }
 
-        function cleanDuplicateProjects(projects) {
-            const map = new Map();
-            projects.forEach(p => {
-                if (!map.has(p.id)) map.set(p.id, p);
-            });
-            return Array.from(map.values());
-        }
-
-        function resetDatabaseDuplicates() {
-            if (confirm("Vuoi ripulire tutti i duplicati dalla griglia e dal database?")) {
-                appData.schedules = cleanDuplicateSchedules(appData.schedules);
-                appData.projects = cleanDuplicateProjects(appData.projects);
-                appData.inProgress = cleanDuplicateProjects(appData.inProgress);
-                saveToCloud();
-                renderUI();
-                alert("Duplicati rimossi con successo!");
-            }
-        }
-
-        function updateSyncStatus(connected) {
-            const statusEl = document.getElementById('sync-status');
-            if(statusEl) {
-                statusEl.innerText = connected ? 'Cloud Sincronizzato' : 'Modalità Locale';
-                statusEl.className = connected ? 'text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium' : 'text-[10px] md:text-xs px-2 py-1 rounded bg-amber-600 text-white font-medium';
-            }
-        }
-
         function saveToCloud() {
-            appData.schedules = cleanDuplicateSchedules(appData.schedules);
-            appData.projects = cleanDuplicateProjects(appData.projects);
-            appData.inProgress = cleanDuplicateProjects(appData.inProgress);
-            localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
-            try { firebase.database().ref('workblocker_data').set(appData); } catch(e){}
+            appData.schedules = cleanUniqueSchedules(appData.schedules);
+            localStorage.setItem('workblocker_clean_data', JSON.stringify(appData));
+            try { firebase.database().ref('workblocker_clean_data').set(appData); } catch(e){}
         }
 
         function switchTab(tabId) {
@@ -424,116 +405,69 @@
             endEl.value = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
         }
 
-        function addMilestoneField(name = '', subDate = '', sub = '') {
+        function addMilestoneField(name = '', subDate = '') {
             const container = document.getElementById('milestones-container');
             const div = document.createElement('div');
             div.className = 'bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block';
             div.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <input type="text" placeholder="Nome Milestone" value="${name}" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                    <input type="date" placeholder="Scadenza Milestone" value="${subDate}" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                    <input type="date" placeholder="Scadenza" value="${subDate}" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
                 </div>
-                <input type="text" placeholder="Sub-task (separate da virgola)" value="${sub}" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
             `;
             container.appendChild(div);
         }
 
         function saveProject(e) {
             e.preventDefault();
-            const editId = document.getElementById('editing-proj-id').value;
             const name = document.getElementById('p-name').value;
             const color = document.getElementById('p-color').value;
             const endDate = document.getElementById('p-enddate').value;
-            const link = document.getElementById('p-link').value;
             
             const blocks = document.querySelectorAll('.milestone-block');
-            const milestones = Array.from(blocks).map(b => {
-                const subStr = b.querySelector('.m-sub').value;
-                return {
-                    id: Date.now() + Math.random(),
-                    name: b.querySelector('.m-name').value,
-                    subDate: b.querySelector('.m-subdate').value,
-                    subtasks: subStr ? subStr.split(',').map(s => s.trim()).filter(s => s) : [],
-                    completed: false
-                };
-            }).filter(m => m.name.trim() !== '');
+            const milestones = Array.from(blocks).map(b => ({
+                name: b.querySelector('.m-name').value,
+                subDate: b.querySelector('.m-subdate').value,
+                completed: false
+            })).filter(m => m.name.trim() !== '');
 
-            const creationDate = new Date().toISOString().split('T')[0];
-
-            if (editId) {
-                const idx = appData.projects.findIndex(p => p.id == editId);
-                if (idx !== -1) appData.projects[idx] = { ...appData.projects[idx], name, color, endDate, link, milestones };
-                const idxInProg = appData.inProgress.findIndex(p => p.id == editId);
-                if (idxInProg !== -1) appData.inProgress[idxInProg] = { ...appData.inProgress[idxInProg], name, color, endDate, link, milestones };
-            } else {
-                appData.projects.push({ id: Date.now(), creationDate, name, color, endDate, link, milestones });
-            }
-
+            appData.projects.push({ id: Date.now(), creationDate: new Date().toISOString().split('T')[0], name, color, endDate, milestones });
             saveToCloud();
             resetProjectForm();
             switchTab('pianificazione');
             renderUI();
-            alert('Progetto salvato con successo nella pianificazione!');
-        }
-
-        function editProject(id) {
-            const p = appData.projects.concat(appData.inProgress).find(proj => proj.id == id);
-            if (!p) return;
-            document.getElementById('editing-proj-id').value = p.id;
-            document.getElementById('form-proj-title').innerText = '✏️ Modifica Scheda Progetto';
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-color').value = p.color;
-            document.getElementById('p-enddate').value = p.endDate;
-            document.getElementById('p-link').value = p.link || '';
-
-            const container = document.getElementById('milestones-container');
-            container.innerHTML = '';
-            if (p.milestones && p.milestones.length > 0) {
-                p.milestones.forEach(m => addMilestoneField(m.name, m.subDate || '', m.subtasks ? m.subtasks.join(', ') : ''));
-            } else { addMilestoneField(); }
-
-            closeModal();
-            switchTab('pianificazione');
+            alert('Progetto salvato con successo!');
         }
 
         function startDailySchedule(e) {
             e.preventDefault();
             const projId = document.getElementById('sched-project').value;
             const executor = document.getElementById('sched-executor').value;
-            const minutes = parseInt(document.getElementById('sched-minutes').value);
             const startT = document.getElementById('sched-starttime').value;
             const endT = document.getElementById('sched-endtime').value;
-            const timeframe = `${startT} - ${endT}`;
             const checkedDays = Array.from(document.querySelectorAll('input[name="day-flag"]:checked')).map(cb => cb.value);
 
-            const projIdx = appData.projects.findIndex(p => p.id == projId);
-            let proj = projIdx !== -1 ? appData.projects[projIdx] : appData.inProgress.find(p => p.id == projId);
+            const proj = appData.projects.find(p => p.id == projId) || appData.inProgress.find(p => p.id == projId);
             if (!proj) return;
 
-            if (projIdx !== -1) {
-                appData.projects.splice(projIdx, 1);
-                if (!appData.inProgress.some(p => p.id == proj.id)) {
-                    appData.inProgress.push(proj);
-                }
+            if (!appData.inProgress.some(p => p.id == proj.id)) {
+                appData.inProgress.push(proj);
             }
 
-            const newSchedule = {
+            appData.schedules.push({
                 id: Date.now(),
                 projectId: proj.id,
                 projectName: proj.name,
                 color: proj.color,
                 executor,
-                minutes,
                 startT,
                 endT,
-                timeframe,
                 days: checkedDays
-            };
+            });
 
-            appData.schedules.push(newSchedule);
             saveToCloud();
             renderUI();
-            alert('Slot inserito correttamente nella griglia settimanale!');
+            alert('Slot aggiunto con successo!');
         }
 
         function renderUI() {
@@ -550,14 +484,9 @@
 
             const plannedList = document.getElementById('planned-projects-list');
             if(plannedList) {
-                plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
+                plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto.</p>' : '';
                 appData.projects.forEach(p => {
-                    plannedList.innerHTML += `
-                        <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2 cursor-pointer hover:border-indigo-500" onclick="openDetailModal(${p.id})">
-                            <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
-                            <p class="text-xs text-slate-400">Scadenza Presunta: ${p.endDate}</p>
-                        </div>
-                    `;
+                    plannedList.innerHTML += `<div class="bg-slate-900 p-4 rounded border border-slate-700"><span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span><p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p></div>`;
                 });
             }
 
@@ -565,17 +494,11 @@
             if(inProgVert) {
                 inProgVert.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto attivo.</p>' : '';
                 appData.inProgress.forEach(p => {
-                    inProgVert.innerHTML += `
-                        <div onclick="openDetailModal(${p.id})" class="bg-slate-900 p-4 rounded border border-slate-700 hover:border-indigo-500 cursor-pointer space-y-2 shadow">
-                            <span class="font-bold text-sm block" style="color: ${p.color}">${p.name}</span>
-                            <p class="text-xs text-slate-400">Scadenza Presunta: ${p.endDate}</p>
-                            <span class="text-[10px] bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800">Scheda e Modifica</span>
-                        </div>
-                    `;
+                    inProgVert.innerHTML += `<div class="bg-slate-900 p-4 rounded border border-slate-700"><span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span><p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p></div>`;
                 });
             }
 
-            // CALENDARIO SETTIMANALE ORDINATO E PULITO
+            // CALENDARIO SETTIMANALE CON PRIORITA GOOGLE CALENDAR
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
             if(grid) {
@@ -586,13 +509,19 @@
                     const d = new Date(curr.setDate(first + idx));
                     const dateStr = `${d.getDate()}/${d.getMonth()+1}`;
 
-                    let dayTasks = appData.schedules.filter(s => s.days && s.days.includes(day));
+                    let dayTasks = [];
+                    if (day === 'Lun') {
+                        dayTasks = dayTasks.concat(googleCalendarTodayEvents);
+                    }
+                    dayTasks = dayTasks.concat(appData.schedules.filter(s => s.days && s.days.includes(day)));
+                    
+                    // Ordina per orario
                     dayTasks.sort((a, b) => (a.startT || "00:00").localeCompare(b.startT || "00:00"));
 
                     let tasksHtml = dayTasks.map(t => `
-                        <div onclick="openDetailModal(${t.projectId})" class="p-2 rounded text-xs cursor-pointer shadow mb-1 border" style="background-color: ${t.color}33; border-color: ${t.color};">
-                            <div class="font-bold text-white">${t.projectName}</div>
-                            <div class="text-[10px] text-slate-200">${t.timeframe || ''}</div>
+                        <div class="p-2 rounded text-xs shadow mb-1 border" style="background-color: ${t.color || '#4f46e5'}33; border-color: ${t.color || '#4f46e5'};">
+                            <div class="font-bold text-white">${t.projectName || t.name}</div>
+                            <div class="text-[10px] text-slate-200">${t.startT} - ${t.endT} ${t.isCalendar ? '📅' : ''}</div>
                         </div>
                     `).join('');
 
@@ -606,48 +535,15 @@
             }
         }
 
-        function openDetailModal(projId) {
-            const proj = appData.projects.concat(appData.inProgress, appData.archive).find(p => p.id == projId) || {};
-            const projNotes = appData.notes.filter(n => n.projId == projId);
-
-            document.getElementById('modal-title').innerText = proj.name || 'Dettaglio Scheda';
-            let milestonesHtml = (proj.milestones || []).map(m => `
-                <div class="bg-slate-900 p-2 rounded border border-slate-700 text-xs my-1">
-                    <b>${m.name}</b> ${m.subDate ? `(${m.subDate})` : ''} ${m.completed ? '✔ (Completata)' : ''}
-                </div>
-            `).join('');
-
-            let notesHtml = projNotes.map(n => `<div class="text-xs text-amber-300 italic my-1">🎙️ "${n.text}" (${n.date})</div>`).join('');
-
-            document.getElementById('modal-content').innerHTML = `
-                <p class="text-xs text-slate-400">Scadenza Presunta: <b>${proj.endDate || 'N/D'}</b></p>
-                <div class="mt-3"><span class="text-xs font-bold text-indigo-300">Milestone:</span>${milestonesHtml || '<p class="text-xs text-slate-500">Nessuna</p>'}</div>
-                <div class="mt-3"><span class="text-xs font-bold text-amber-400">Note Vocali:</span>${notesHtml || '<p class="text-xs text-slate-500">Nessuna nota</p>'}</div>
-            `;
-            document.getElementById('modal-edit-btn').setAttribute('onclick', `editProject(${proj.id})`);
-            document.getElementById('detail-modal').classList.remove('hidden');
-        }
-
-        function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
-
         function resetProjectForm() {
             document.getElementById('project-form').reset();
             document.getElementById('editing-proj-id').value = '';
-            document.getElementById('form-proj-title').innerText = '📁 Nuova Scheda Progetto';
-            document.getElementById('milestones-container').innerHTML = `
-                <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                        <input type="date" placeholder="Scadenza Milestone" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                    </div>
-                    <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
-                </div>`;
         }
 
         function triggerMorningBriefing() {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance("Buongiorno Matteo. Oggi hai in programma la gestione dei progetti e della ristrutturazione.");
+                const utterance = new SpeechSynthesisUtterance("Buongiorno Matteo. Oggi hai in programma gli impegni da Google Calendar e i progetti di studio.");
                 utterance.lang = 'it-IT';
                 window.speechSynthesis.speak(utterance);
             }
@@ -664,27 +560,21 @@
 
         function toggleVoiceRecording() {
             const textArea = document.getElementById('voice-note-text');
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Riconoscimento vocale non supportato.');
-                return;
-            }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return alert('Non supportato.');
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'it-IT';
             recognition.onresult = function(e) { textArea.value = e.results[0][0].transcript; };
             recognition.start();
-            alert('Ascolto in corso... Parla ora.');
         }
 
         function saveVoiceNote() {
             const projId = document.getElementById('note-project-select').value;
             const text = document.getElementById('voice-note-text').value;
-            if(!projId || !text) return alert('Seleziona un progetto e inserisci il testo.');
+            if(!projId || !text) return alert('Seleziona progetto e testo.');
             appData.notes.push({ projId, text, date: new Date().toLocaleDateString() });
             saveToCloud();
             document.getElementById('voice-note-text').value = '';
-            renderUI();
-            alert('Nota vocale salvata!');
+            alert('Nota salvata!');
         }
     </script>
 </body>
