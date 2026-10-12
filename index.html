@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Master Engine v8</title>
+    <title>WorkBlocker PRO - Recovery Engine v8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-magenta-critical { background-color: #d946ef !important; }
@@ -29,7 +29,7 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">v8 Master Engine</span>
+            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Ripristino Automatico Attivo</span>
         </div>
         <div class="flex items-center space-x-2">
             <button type="button" onclick="exportDataJSON()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">📥 Esporta Backup</button>
@@ -207,13 +207,34 @@
             { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        let appData = JSON.parse(localStorage.getItem('wb_master_v8')) || {
-            projects: [],
-            inProgress: [],
-            schedules: [],
-            notes: [],
-            showMilestonesPanel: false
-        };
+        // --- RIPRISTINO AUTOMATICO DA TUTTE LE CHIAVI PRECEDENTI ---
+        function recoverAllPreviousData() {
+            const keys = ['wb_master_v8', 'wb_perfect_v7', 'wb_ultimate_v6', 'wb_temporal_v5', 'wb_milestones_v4', 'wb_safe_v3', 'wb_complete_v2'];
+            let mergedData = { projects: [], inProgress: [], schedules: [], notes: [], showMilestonesPanel: false };
+
+            keys.forEach(k => {
+                const item = localStorage.getItem(k);
+                if (item) {
+                    try {
+                        const parsed = JSON.parse(item);
+                        if (parsed.projects) mergedData.projects = mergedData.projects.concat(parsed.projects);
+                        if (parsed.inProgress) mergedData.inProgress = mergedData.inProgress.concat(parsed.inProgress);
+                        if (parsed.schedules) mergedData.schedules = mergedData.schedules.concat(parsed.schedules);
+                        if (parsed.notes) mergedData.notes = mergedData.notes.concat(parsed.notes);
+                    } catch(e) {}
+                }
+            });
+
+            // Rimuovi duplicati per ID
+            const uniqueById = (arr) => Array.from(new Map(arr.map(item => [item.id, item])).values());
+            mergedData.projects = uniqueById(mergedData.projects);
+            mergedData.inProgress = uniqueById(mergedData.inProgress);
+            mergedData.schedules = uniqueById(mergedData.schedules);
+            
+            return mergedData;
+        }
+
+        let appData = recoverAllPreviousData();
 
         let mainClockInterval = null, lastAlertMin = -1;
 
@@ -367,7 +388,6 @@
                     let hasUncompletedPassedMilestone = false;
                     let hasAnticipatedMilestone = false;
 
-                    // Forza sempre l'ordinamento cronologico
                     if (proj.milestones) {
                         proj.milestones.sort((a, b) => new Date(a.subDate || '2099-12-31') - new Date(b.subDate || '2099-12-31'));
                     }
@@ -392,7 +412,6 @@
                     }
                 }
 
-                // Markers su tre righe ordinate e distanziate visivamente
                 let timelineMarkersHtml = '';
                 if (!isCal && (proj.milestones || []).length > 0) {
                     timelineMarkersHtml = (proj.milestones || []).map((m, idx) => {
