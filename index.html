@@ -32,72 +32,40 @@
         </div>
     </header>
 
+    <!-- Navigation Tabs -->
+    <nav class="bg-slate-800/80 border-b border-slate-700 px-4 py-2 flex space-x-4 overflow-x-auto text-sm">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-1.5 rounded bg-indigo-600 text-white font-medium transition">Dashboard & Attività</button>
+        <button onclick="switchTab('pianificazione')" id="tab-pianificazione" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition">Pianificazione</button>
+        <button onclick="switchTab('archivio')" id="tab-archivio" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition">Archivio</button>
+        <button onclick="switchTab('note')" id="tab-note" class="px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition">Note Vocali</button>
+    </nav>
+
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="max-w-7xl mx-auto p-4 space-y-6">
         
-        <!-- Colonna Sinistra: Gestione & Pianificazione (Sez 1 & 2) -->
-        <section class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4 lg:col-span-1">
-            <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Pianificazione Progetti</h2>
+        <!-- SEZIONE 1 & 4: DASHBOARD & ATTIVITA IN CORSO -->
+        <div id="section-dashboard" class="space-y-6">
             
-            <form id="project-form" onsubmit="saveProject(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Nome Progetto</label>
-                    <input type="text" id="p-name" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="Es. Ristrutturazione Villa Roma">
-                </div>
+            <!-- Timer & Active Control Board (Avvia la giornata) -->
+            <div id="timer-box" class="bg-slate-800 p-6 rounded-xl border border-indigo-500/50 shadow-lg hidden flex flex-col items-center justify-center space-y-4">
+                <span id="active-task-title" class="text-base font-semibold text-indigo-300 uppercase tracking-wider text-center">Nessuna attività in corso</span>
+                <div id="countdown-display" class="text-6xl font-mono font-bold text-white tracking-widest">00:00</div>
                 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Colore Palette</label>
-                        <input type="color" id="p-color" value="#4f46e5" class="w-full h-9 bg-slate-900 border border-slate-700 rounded cursor-pointer p-1">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">OneDrive Link</label>
-                        <input type="url" id="p-link" placeholder="https://onedrive.live.com/..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
-                    </div>
+                <!-- Milestone e sub-task dell'attività in corso -->
+                <div id="active-task-details" class="w-full bg-slate-900 p-4 rounded-lg border border-slate-700 space-y-2 text-sm">
+                    <!-- Dinamico -->
                 </div>
 
-                <!-- Milestone & Sub-tasks -->
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Milestone e Sub-task</label>
-                    <div id="milestones-container" class="space-y-2 mb-2">
-                        <div class="flex space-x-1">
-                            <input type="text" placeholder="Nome Milestone" class="milestone-input w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs">
-                        </div>
-                    </div>
-                    <button type="button" onclick="addMilestoneField()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Aggiungi Milestone</button>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded text-sm transition shadow">Salva in Pianificazione / Archivio</button>
-                </div>
-            </form>
-
-            <hr class="border-slate-700 my-4">
-
-            <!-- Sezione Note Vocali -->
-            <div>
-                <h3 class="text-md font-semibold text-indigo-300 mb-2">🎙️ Note Vocali Rapide</h3>
-                <div class="space-y-2">
-                    <select id="note-project-select" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-300">
-                        <option value="">Seleziona Progetto per Nota...</option>
-                    </select>
-                    <div class="flex space-x-2">
-                        <button type="button" onclick="toggleVoiceRecording()" id="rec-btn" class="flex-1 bg-rose-600 hover:bg-rose-700 py-1.5 rounded text-xs font-medium transition">Avvia Registrazione Vocale</button>
-                    </div>
-                    <textarea id="voice-note-text" placeholder="Il testo trascritto comparirà qui..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs h-16 focus:outline-none"></textarea>
-                    <button type="button" onclick="saveVoiceNote()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-xs py-1.5 rounded font-medium">Associa Nota al Progetto</button>
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="pauseTimer()" id="pause-btn" class="bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded text-sm font-medium transition">Pausa</button>
+                    <button onclick="completeActiveTask()" class="bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded text-sm font-medium transition">Completa Attività</button>
                 </div>
             </div>
-        </section>
 
-        <!-- Colonna Centrale & Destra: Programmazione & Dashboard (Sez 3 & 4) -->
-        <section class="lg:col-span-2 space-y-6">
-            
-            <!-- Programmazione Giornaliera Attiva -->
+            <!-- Avvio Programmazione Giornaliera Form -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Programmazione Giornaliera & Esecuzione</h2>
-                
-                <form id="schedule-form" onsubmit="saveDailySchedule(event)" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Avvia Programmazione Giornaliera</h2>
+                <form id="schedule-form" onsubmit="startDailySchedule(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Seleziona Progetto Pianificato</label>
                         <select id="sched-project" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-300">
@@ -109,47 +77,126 @@
                         <input type="text" id="sched-executor" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm" placeholder="Es. Matteo Pavese">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Data Inizio</label>
-                        <input type="date" id="sched-start" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Presunta Data Completamento</label>
-                        <input type="date" id="sched-end" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
-                    </div>
-                    <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Slot Orario (Minuti)</label>
                         <input type="number" id="sched-minutes" value="60" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
                     </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded text-sm transition">Conferma Programmazione</button>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded text-sm transition">Avvia Attività Giornaliera</button>
                     </div>
                 </form>
             </div>
 
-            <!-- Timer & Active Control Board -->
-            <div id="timer-box" class="bg-slate-800 p-5 rounded-xl border border-indigo-500/50 shadow-lg hidden flex flex-col items-center justify-center space-y-3">
-                <span id="active-task-title" class="text-sm font-semibold text-indigo-300 uppercase tracking-wider">Nessuna attività in corso</span>
-                <div id="countdown-display" class="text-5xl font-mono font-bold text-white">00:00</div>
-                <div class="flex space-x-3">
-                    <button onclick="pauseTimer()" id="pause-btn" class="bg-amber-600 hover:bg-amber-700 px-4 py-1.5 rounded text-sm font-medium">Pausa</button>
-                    <button onclick="completeTask()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-1.5 rounded text-sm font-medium">Completa Attività</button>
-                </div>
-            </div>
-
-            <!-- Dashboard Attività in Corso & Avanzamento -->
+            <!-- Dashboard List (Orizzontale & Verticale) -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📊 Dashboard Avanzamento Attività</h2>
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <h2 class="text-lg font-semibold text-indigo-300">📊 Dashboard Attività</h2>
+                    <span class="text-xs text-slate-400">Clicca su una barra per aprire la scheda dettagliata</span>
+                </div>
                 <div id="dashboard-list" class="space-y-4">
                     <!-- Dinamico -->
                 </div>
             </div>
+        </div>
 
-        </section>
+        <!-- SEZIONE 1 & 2: PIANIFICAZIONE PROGETTI -->
+        <div id="section-pianificazione" class="space-y-6 hidden">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
+                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Nuova Scheda Progetto & Pianificazione</h2>
+                
+                <form id="project-form" onsubmit="saveProject(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Nome Progetto</label>
+                            <input type="text" id="p-name" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm" placeholder="Es. Ristrutturazione Villa Roma">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Colore Palette</label>
+                                <input type="color" id="p-color" value="#4f46e5" class="w-full h-9 bg-slate-900 border border-slate-700 rounded cursor-pointer p-1">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">Data Presunta Fine</label>
+                                <input type="date" id="p-enddate" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Link Cartella Condivisa OneDrive</label>
+                        <input type="url" id="p-link" placeholder="https://onedrive.live.com/..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+                    </div>
+
+                    <!-- Milestone & Sub-tasks builder -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Milestones e Sub-tasks</label>
+                        <div id="milestones-container" class="space-y-3 mb-2">
+                            <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
+                                <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                                <input type="text" placeholder="Sub-task (separa con virgola o aggiungi sotto)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                            </div>
+                        </div>
+                        <button type="button" onclick="addMilestoneField()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Aggiungi un'altra Milestone</button>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded text-sm transition">Salva in Pianificazione</button>
+                </form>
+            </div>
+
+            <!-- Lista Progetti Pianificati (Non avviati) -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📋 Progetti Pianificati in Attesa</h2>
+                <div id="planned-projects-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dinamico -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SEZIONE ARCHIVIO -->
+        <div id="section-archivio" class="space-y-6 hidden">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
+                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🗄️ Archivio Progetti Completati</h2>
+                <div id="archive-list" class="space-y-4">
+                    <!-- Dinamico -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SEZIONE NOTE VOCALI -->
+        <div id="section-note" class="space-y-6 hidden">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4 max-w-xl mx-auto">
+                <h2 class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">🎙️ Note Vocali Rapide</h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Associa a Progetto</label>
+                        <select id="note-project-select" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-300">
+                            <option value="">Seleziona Progetto...</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="toggleVoiceRecording()" class="w-full bg-rose-600 hover:bg-rose-700 py-2 rounded text-sm font-medium transition">Avvia Registrazione Vocale</button>
+                    <textarea id="voice-note-text" placeholder="Il testo trascritto comparirà qui..." class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm h-24 focus:outline-none"></textarea>
+                    <button type="button" onclick="saveVoiceNote()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded text-sm font-medium transition">Salva Nota nel Progetto</button>
+                </div>
+            </div>
+        </div>
 
     </main>
 
+    <!-- Modal Dettaglio Scheda -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 id="modal-title" class="text-lg font-bold text-indigo-300">Dettaglio Progetto</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div id="modal-content" class="space-y-3 text-sm">
+                <!-- Dinamico -->
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closeModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-1.5 rounded text-xs">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Configurazione Firebase con i dati forniti dall'utente
         const firebaseConfig = {
             apiKey: "AIzaSyDivabIe2alybtGmwemXHbvYigaEkvP9g",
             authDomain: "workblocker-app.firebaseapp.com",
@@ -163,16 +210,21 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let appData = { projects: [], schedules: [], notes: [] };
+        let appData = { projects: [], schedules: [], archive: [], notes: [] };
         let activeTimer = null;
         let remainingSeconds = 0;
         let isPaused = false;
+        let currentActiveSchedule = null;
 
-        // Sincronizzazione in tempo reale con Firebase
         db.ref('workblocker_data').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                appData = data;
+                appData = {
+                    projects: data.projects || [],
+                    schedules: data.schedules || [],
+                    archive: data.archive || [],
+                    notes: data.notes || []
+                };
                 document.getElementById('sync-status').innerText = 'Cloud Sincronizzato';
                 document.getElementById('sync-status').className = 'text-xs px-2 py-1 rounded bg-emerald-600 text-white';
             } else {
@@ -185,11 +237,23 @@
             db.ref('workblocker_data').set(appData);
         }
 
+        function switchTab(tabId) {
+            ['dashboard', 'pianificazione', 'archivio', 'note'].forEach(t => {
+                document.getElementById(`section-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "px-3 py-1.5 rounded text-slate-300 hover:bg-slate-700 transition";
+            });
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).className = "px-3 py-1.5 rounded bg-indigo-600 text-white font-medium transition";
+        }
+
         function addMilestoneField() {
             const container = document.getElementById('milestones-container');
             const div = document.createElement('div');
-            div.className = 'flex space-x-1';
-            div.innerHTML = `<input type="text" placeholder="Nome Milestone" class="milestone-input w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs">`;
+            div.className = 'bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block';
+            div.innerHTML = `
+                <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                <input type="text" placeholder="Sub-task (separa con virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+            `;
             container.appendChild(div);
         }
 
@@ -197,30 +261,68 @@
             e.preventDefault();
             const name = document.getElementById('p-name').value;
             const color = document.getElementById('p-color').value;
+            const endDate = document.getElementById('p-enddate').value;
             const link = document.getElementById('p-link').value;
-            const milestoneInputs = document.querySelectorAll('.milestone-input');
-            const milestones = Array.from(milestoneInputs).map(i => i.value).filter(v => v.trim() !== '');
+            
+            const blocks = document.querySelectorAll('.milestone-block');
+            const milestones = Array.from(blocks).map(b => {
+                return {
+                    name: b.querySelector('.m-name').value,
+                    subtasks: b.querySelector('.m-sub').value.split(',').map(s => s.trim()).filter(s => s)
+                };
+            }).filter(m => m.name.trim() !== '');
 
-            const newProj = { id: Date.now(), name, color, link, milestones, status: 'pianificato' };
+            const newProj = {
+                id: Date.now(),
+                name,
+                color,
+                endDate,
+                link,
+                milestones,
+                startDate: new Date().toISOString().split('T')[0]
+            };
+
             appData.projects.push(newProj);
             saveToCloud();
             document.getElementById('project-form').reset();
-            alert('Progetto salvato con successo!');
+            switchTab('dashboard');
+            alert('Progetto salvato con successo nella pianificazione!');
         }
 
-        function saveDailySchedule(e) {
+        function copyProject(id) {
+            const p = appData.projects.find(proj => proj.id == id);
+            if (!p) return;
+            const copy = JSON.parse(JSON.stringify(p));
+            copy.id = Date.now();
+            copy.name = `${p.name} (Copia)`;
+            appData.projects.push(copy);
+            saveToCloud();
+            alert('Progetto duplicato con successo!');
+        }
+
+        function startDailySchedule(e) {
             e.preventDefault();
             const projId = document.getElementById('sched-project').value;
             const executor = document.getElementById('sched-executor').value;
-            const start = document.getElementById('sched-start').value;
-            const end = document.getElementById('sched-end').value;
             const minutes = parseInt(document.getElementById('sched-minutes').value);
 
             const proj = appData.projects.find(p => p.id == projId);
             if (!proj) return;
 
-            const newSched = { id: Date.now(), projectName: proj.name, color: proj.color, executor, start, end, minutes, status: 'in-corso' };
-            appData.schedules.push(newSched);
+            currentActiveSchedule = {
+                id: Date.now(),
+                projectId: proj.id,
+                projectName: proj.name,
+                color: proj.color,
+                executor,
+                minutes,
+                startDate: new Date().toISOString().split('T')[0],
+                endDate: proj.endDate,
+                milestones: proj.milestones,
+                link: proj.link
+            };
+
+            appData.schedules.push(currentActiveSchedule);
             saveToCloud();
 
             startCountdown(minutes * 60, proj.name);
@@ -228,53 +330,81 @@
         }
 
         function renderUI() {
-            // Select Progetti
+            // Select Progetti Pianificati
             const projSelect = document.getElementById('sched-project');
             const noteSelect = document.getElementById('note-project-select');
             projSelect.innerHTML = '<option value="">Seleziona...</option>';
-            noteSelect.innerHTML = '<option value="">Seleziona Progetto per Nota...</option>';
+            noteSelect.innerHTML = '<option value="">Seleziona Progetto...</option>';
 
             appData.projects.forEach(p => {
                 projSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
                 noteSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
             });
 
-            // Dashboard Avanzamento
-            const dash = document.getElementById('dashboard-list');
-            dash.innerHTML = '';
-            
-            if (appData.schedules.length === 0) {
-                dash.innerHTML = '<p class="text-xs text-slate-400">Nessuna attività programmata.</p>';
-                return;
-            }
+            // Lista Pianificati
+            const plannedList = document.getElementById('planned-projects-list');
+            plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
+            appData.projects.forEach(p => {
+                plannedList.innerHTML += `
+                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
+                            <button onclick="copyProject(${p.id})" class="text-xs bg-indigo-600 hover:bg-indigo-700 px-2 py-1 rounded">Copia</button>
+                        </div>
+                        <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
+                        <p class="text-xs text-slate-400">Milestones: ${p.milestones.length}</p>
+                    </div>
+                `;
+            });
 
+            // Dashboard & Avanzamento
+            const dash = document.getElementById('dashboard-list');
+            dash.innerHTML = appData.schedules.length === 0 ? '<p class="text-xs text-slate-400">Nessuna attività attiva nella programmazione giornaliera.</p>' : '';
+            
             appData.schedules.forEach(s => {
                 const today = new Date();
-                const endDate = new Date(s.end);
-                const startDate = new Date(s.start);
+                const endDate = new Date(s.endDate);
+                const startDate = new Date(s.startDate);
                 const totalDays = Math.max(1, (endDate - startDate) / (1000 * 60 * 60 * 24));
                 const passedDays = Math.max(0, (today - startDate) / (1000 * 60 * 60 * 24));
                 let progress = Math.min(100, Math.round((passedDays / totalDays) * 100));
-
+                
                 let barColor = 'bg-indigo-600';
                 let isDelayed = today > endDate;
-                if (isDelayed) {
-                    barColor = 'bg-viola-ritardo';
-                }
+                if (isDelayed) barColor = 'bg-viola-ritardo';
+
+                let milestonesHtml = s.milestones.map(m => `<li class="text-xs text-slate-300">• ${m.name}</li>`).join('');
 
                 dash.innerHTML += `
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
+                    <div onclick="openDetailModal(${s.id})" class="bg-slate-900 p-4 rounded-xl border border-slate-700 hover:border-indigo-500 cursor-pointer transition space-y-3">
                         <div class="flex justify-between items-center text-xs">
-                            <span class="font-bold" style="color: ${s.color}">${s.projectName}</span>
+                            <span class="font-bold text-sm" style="color: ${s.color}">${s.projectName}</span>
                             <span class="text-slate-400">Esecutore: ${s.executor}</span>
                         </div>
-                        <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
-                            <div class="${barColor} h-2.5 rounded-full" style="width: ${progress}%"></div>
+                        <div class="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
+                            <div class="${barColor} h-3 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
                         </div>
-                        <div class="flex justify-between text-[10px] text-slate-400">
-                            <span>Avvio: ${s.start}</span>
-                            <span>Scadenza: ${s.end} ${isDelayed ? '⚠️ IN RITARDO (Viola)' : ''}</span>
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>Avvio: ${s.startDate}</span>
+                            <span>Scadenza: ${s.endDate} ${isDelayed ? '⚠️ IN RITARDO (Viola)' : ''}</span>
                         </div>
+                        <ul class="pl-2 space-y-1 border-t border-slate-800 pt-2">${milestonesHtml}</ul>
+                    </div>
+                `;
+            });
+
+            // Archivio
+            const archList = document.getElementById('archive-list');
+            archList.innerHTML = appData.archive.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto archiviato.</p>' : '';
+            appData.archive.forEach(a => {
+                archList.innerHTML += `
+                    <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2">
+                        <div class="flex justify-between">
+                            <span class="font-bold text-sm" style="color: ${a.color}">${a.projectName}</span>
+                            <span class="text-xs text-emerald-400 font-medium">Completato</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Esecutore: ${a.executor}</p>
+                        <p class="text-xs text-slate-400">Completato il: ${a.completedAt}</p>
                     </div>
                 `;
             });
@@ -283,6 +413,17 @@
         function startCountdown(seconds, taskName) {
             document.getElementById('timer-box').classList.remove('hidden');
             document.getElementById('active-task-title').innerText = `Attività in corso: ${taskName}`;
+            
+            if (currentActiveSchedule && currentActiveSchedule.milestones) {
+                let detailsHtml = '<span class="text-xs font-bold text-indigo-300">Milestones e Sub-task:</span>';
+                currentActiveSchedule.milestones.forEach(m => {
+                    detailsHtml += `<div class="text-xs text-slate-300 mt-1">✔ <b>${m.name}</b>`;
+                    if(m.subtasks.length > 0) detailsHtml += `<br>&nbsp;&nbsp;&nbsp;&nbsp;↳ Sub: ${m.subtasks.join(', ')}`;
+                    detailsHtml += `</div>`;
+                });
+                document.getElementById('active-task-details').innerHTML = detailsHtml;
+            }
+
             remainingSeconds = seconds;
             isPaused = false;
 
@@ -307,18 +448,49 @@
             isPaused = !isPaused;
             document.getElementById('pause-btn').innerText = isPaused ? 'Riprendi' : 'Pausa';
             if (isPaused) {
-                if (confirm('Vuoi slittare la programmazione o ridurre automaticamente le attività successive del ritardo generato?')) {
-                    alert('Attività successive slittate con successo.');
+                if (confirm('Interruzione registrata. Vuoi slittare la programmazione o ridurre automaticamente le attività successive? (OK = Slitta, Annulla = Riduce)')) {
+                    alert('Programmazione slittata del ritardo generato.');
                 } else {
                     alert('Attività successive ridotte proporzionalmente.');
                 }
             }
         }
 
-        function completeTask() {
+        function completeActiveTask() {
+            if (!currentActiveSchedule) return;
             clearInterval(window.timerInterval);
             document.getElementById('timer-box').classList.add('hidden');
-            alert('Attività completata e archiviata!');
+            
+            currentActiveSchedule.completedAt = new Date().toLocaleDateString();
+            appData.archive.push(currentActiveSchedule);
+            appData.schedules = appData.schedules.filter(s => s.id !== currentActiveSchedule.id);
+            currentActiveSchedule = null;
+
+            saveToCloud();
+            alert('Attività completata e spostata nell\'archivio con successo!');
+        }
+
+        function openDetailModal(id) {
+            const sched = appData.schedules.find(s => s.id == id);
+            if (!sched) return;
+
+            document.getElementById('modal-title').innerText = sched.projectName;
+            let content = `<p class="text-xs text-slate-400">Esecutore: <b>${sched.executor}</b></p>`;
+            content += `<p class="text-xs text-slate-400">Periodo: ${sched.startDate} → ${sched.endDate}</p>`;
+            if(sched.link) content += `<p class="text-xs"><a href="${sched.link}" target="_blank" class="text-indigo-400 underline">Apri cartella OneDrive</a></p>`;
+            
+            content += `<div class="mt-3 space-y-2"><span class="text-xs font-bold text-indigo-300">Milestone e Sub-task:</span>`;
+            sched.milestones.forEach(m => {
+                content += `<div class="bg-slate-900 p-2 rounded text-xs"><b>${m.name}</b><br>Sub-tasks: ${m.subtasks.join(', ') || 'Nessuna'}</div>`;
+            });
+            content += `</div>`;
+
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
         }
 
         function triggerMorningBriefing() {
@@ -337,7 +509,6 @@
             }
         }
 
-        let recognizing = false;
         function toggleVoiceRecording() {
             const textArea = document.getElementById('voice-note-text');
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -347,7 +518,6 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
-            
             recognition.onresult = function(event) {
                 textArea.value = event.results[0][0].transcript;
             };
@@ -365,7 +535,7 @@
             appData.notes.push({ projId, text, date: new Date().toLocaleDateString() });
             saveToCloud();
             document.getElementById('voice-note-text').value = '';
-            alert('Nota vocale associata con successo!');
+            alert('Nota vocale salvata e associata al progetto!');
         }
     </script>
 </body>
