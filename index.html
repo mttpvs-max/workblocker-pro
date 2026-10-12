@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Multi-Device & Calendar Synced</title>
+    <title>WorkBlocker PRO - Final Stable Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDKs Compatibili -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- Google API Client per Calendar -->
-    <script src="https://apis.google.com/js/api.js"></script>
     <style>
         .bg-viola-ritardo { background-color: #8b5cf6 !important; }
         .text-viola-ritardo { color: #8b5cf6 !important; }
-        .border-viola-ritardo { border-color: #8b5cf6 !important; }
         .milestone-label-45 {
             transform: rotate(-45deg);
             transform-origin: left bottom;
@@ -28,12 +24,11 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Cloud Sincronizzato</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="syncGoogleCalendar()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">📅 Sync Google Calendar</button>
-            <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">☀️ Briefing</button>
-            <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
+            <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
+            <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
     </header>
 
@@ -51,51 +46,33 @@
         
         <!-- DASHBOARD SETTIMANALE -->
         <div id="section-dashboard" class="space-y-6">
-            
-            <!-- Vista Settimanale Ordinata (Lun-Dom) -->
+
+            <!-- ATTIVITÀ IN CORSO / BARRA DI AVANZAMENTO -->
+            <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                        <h2 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Monitoraggio Attività & Avanzamento Progetto</h2>
+                    </div>
+                    <span id="current-clock" class="text-xs font-mono text-slate-400"></span>
+                </div>
+                <div id="active-tracker-content" class="space-y-4">
+                    <!-- Dinamico -->
+                </div>
+            </div>
+
+            <!-- Vista Settimanale Ordinata (Lun-Dom) Senza Duplicati -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (In Ordine Cronologico)</h2>
-                    <span class="text-xs text-slate-400">Priorità sincronizzata con Google Calendar</span>
+                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Lunedì - Domenica)</h2>
+                    <span class="text-xs text-slate-400">Ordinata cronologicamente</span>
                 </div>
                 <div id="weekly-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
             </div>
 
-            <!-- Timer Flusso Continuo & Avanzamento Temporale Progetto -->
-            <div id="timer-box" class="bg-slate-800 p-6 rounded-xl border border-indigo-500/50 shadow-lg hidden flex flex-col items-center justify-center space-y-6">
-                <span id="active-task-title" class="text-base font-semibold text-indigo-300 uppercase tracking-wider text-center">Nessuna attività in corso</span>
-                <div id="countdown-display" class="text-5xl md:text-6xl font-mono font-bold text-white tracking-widest">00:00</div>
-                
-                <div id="pause-status-box" class="hidden text-xs text-amber-400 font-semibold flex items-center space-x-2 bg-amber-950/40 px-3 py-1 rounded border border-amber-800">
-                    <span class="animate-pulse">⏸️ Timer In Pausa</span>
-                    <span>| Tempo Perso: <b id="lost-time-display">0s</b></span>
-                </div>
-
-                <!-- Avanzamento Globale Progetto (Inizio Progetto ➔ Scadenza Finale) -->
-                <div class="w-full max-w-4xl space-y-12 pt-6 pb-12 px-4">
-                    <div class="flex justify-between text-xs text-slate-400 mb-1">
-                        <span>Avvio Progetto: <b id="proj-start-label">--/--</b></span>
-                        <span id="proj-status-flag" class="font-bold">In Corso</span>
-                        <span>Scadenza Finale: <b id="proj-end-label">--/--</b></span>
-                    </div>
-                    <div class="relative w-full bg-slate-700 h-4 rounded-full" id="timeline-bar-container">
-                        <div id="active-progress-bar" class="bg-indigo-600 h-4 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                        <div id="milestone-markers-container" class="absolute inset-0 pointer-events-none"></div>
-                    </div>
-                </div>
-
-                <!-- Lista Milestone Interattive (Flaggabili) -->
-                <div id="interactive-milestones-list" class="w-full max-w-2xl bg-slate-900 p-4 rounded-lg border border-slate-700 space-y-2 text-xs"></div>
-
-                <div class="flex space-x-3">
-                    <button type="button" onclick="handlePauseResume()" id="pause-btn" class="bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded text-xs md:text-sm font-medium transition cursor-pointer">Pausa</button>
-                    <button type="button" onclick="completeActiveTask()" class="bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded text-xs md:text-sm font-medium transition cursor-pointer">Completa Attività</button>
-                </div>
-            </div>
-
             <!-- Form Inserimento Programmazione Giornaliera -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Programmazione Giornaliera Automatic Flow</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci in Programmazione Settimanale</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
@@ -116,7 +93,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio Programmato</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio</label>
                             <input type="time" id="sched-starttime" value="09:00" oninput="calculateEndTime()" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                         <div>
@@ -138,21 +115,15 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded text-xs md:text-sm transition cursor-pointer">Inserisci nel Flusso Continuo</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded text-xs md:text-sm transition cursor-pointer">Aggiungi alla Griglia Settimanale</button>
                 </form>
-            </div>
-
-            <!-- Progetti in Corso -->
-            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">🚀 Progetti Attivi in Corso</h2>
-                <div id="horizontal-in-progress-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
         <!-- PIANIFICAZIONE -->
         <div id="section-pianificazione" class="space-y-6 hidden">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 id="form-proj-title" class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Scheda Progetto</h2>
+                <h2 id="form-proj-title" class="text-xl font-semibold text-indigo-300 border-b border-slate-700 pb-2">📁 Nuova Scheda Progetto</h2>
                 <form id="project-form" onsubmit="saveProject(event)" class="space-y-4">
                     <input type="hidden" id="editing-proj-id" value="">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,7 +143,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Cartella OneDrive</label>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Cartella OneDrive Link</label>
                         <input type="url" id="p-link" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                     </div>
                     <div>
@@ -265,13 +236,103 @@
             projects: [], inProgress: [], schedules: [], archive: [], notes: []
         };
 
-        let remainingSeconds = 0, totalTaskSeconds = 0, isPaused = false, totalLostSeconds = 0, lostTimerInterval = null, currentActiveSchedule = null;
+        let mainClockInterval = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             calculateEndTime();
             renderUI();
             initFirebaseConnection();
+            startMainClock();
         });
+
+        function startMainClock() {
+            if (mainClockInterval) clearInterval(mainClockInterval);
+            mainClockInterval = setInterval(() => {
+                const now = new Date();
+                const clockEl = document.getElementById('current-clock');
+                if (clockEl) {
+                    clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+                updateActiveTracker(now);
+            }, 1000);
+        }
+
+        function updateActiveTracker(now) {
+            const container = document.getElementById('active-tracker-content');
+            if (!container) return;
+
+            const daysMap = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+            const todayDay = daysMap[now.getDay()];
+            const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const activeSchedule = appData.schedules.find(s => {
+                if (!s.days || !s.days.includes(todayDay)) return false;
+                return currentTimeStr >= s.startT && currentTimeStr <= s.endT;
+            });
+
+            if (activeSchedule) {
+                const proj = appData.inProgress.concat(appData.projects).find(p => p.id == activeSchedule.projectId) || activeSchedule;
+                
+                const startDate = new Date(proj.creationDate || now);
+                const endDate = new Date(proj.endDate);
+                const totalSpan = Math.max(1, endDate - startDate);
+                const elapsed = Math.max(0, now - startDate);
+                let progressPercent = Math.min(100, Math.round((elapsed / totalSpan) * 100));
+
+                let isDelayed = now > endDate;
+                if (proj.milestones) {
+                    proj.milestones.forEach(m => {
+                        if (m.subDate && !m.completed && now > new Date(m.subDate)) isDelayed = true;
+                    });
+                }
+
+                let milestonesListHtml = (proj.milestones || []).map((m, idx) => `
+                    <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700 text-xs">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" ${m.completed ? 'checked' : ''} onchange="toggleMilestone(${proj.id}, ${idx})" class="rounded text-indigo-600">
+                            <span class="${m.completed ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}">${m.name}</span>
+                        </label>
+                        <span class="text-[11px] text-slate-400">${m.subDate ? `Scadenza: ${m.subDate}` : ''}</span>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color}">${proj.name}</h3>
+                    <div class="text-xs text-slate-300">Slot Attivo: <b>${activeSchedule.startT} - ${activeSchedule.endT}</b> | Esecutore: ${activeSchedule.executor}</div>
+                    
+                    <div class="w-full space-y-1">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>Avvio: ${startDate.toLocaleDateString()}</span>
+                            <span class="${isDelayed ? 'text-viola-ritardo font-bold' : 'text-emerald-400 font-bold'}">${isDelayed ? '⚠️ RITARDO' : 'In Corso'} (${progressPercent}%)</span>
+                            <span>Scadenza: ${endDate.toLocaleDateString()}</span>
+                        </div>
+                        <div class="relative w-full bg-slate-700 h-4 rounded-full overflow-hidden">
+                            <div class="${isDelayed ? 'bg-viola-ritardo' : 'bg-indigo-600'} h-4 rounded-full transition-all duration-500" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="w-full space-y-2 pt-2">
+                        <span class="text-xs font-bold text-indigo-300">Milestone del Progetto (Spunta per completare):</span>
+                        ${milestonesListHtml || '<p class="text-xs text-slate-500">Nessuna milestone impostata.</p>'}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="text-slate-400 text-sm py-3 text-center">
+                        <span>☕ Nessun slot orario attivo in questo momento (${currentTimeStr}). L'app è in ascolto per la prossima attività programmata.</span>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleMilestone(projId, idx) {
+            const proj = appData.inProgress.concat(appData.projects).find(p => p.id == projId);
+            if (proj && proj.milestones && proj.milestones[idx]) {
+                proj.milestones[idx].completed = !proj.milestones[idx].completed;
+                saveToCloud();
+                renderUI();
+            }
+        }
 
         function initFirebaseConnection() {
             try {
@@ -298,7 +359,7 @@
         function cleanDuplicateSchedules(schedules) {
             const map = new Map();
             schedules.forEach(s => {
-                const key = `${s.projectId}-${s.timeframe}-${(s.days||[]).join('')}`;
+                const key = `${s.projectId}-${s.startT}-${s.endT}-${(s.days||[]).join('')}`;
                 if (!map.has(key)) map.set(key, s);
             });
             return Array.from(map.values());
@@ -313,6 +374,7 @@
         }
 
         function saveToCloud() {
+            appData.schedules = cleanDuplicateSchedules(appData.schedules);
             localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
             try { firebase.database().ref('workblocker_data').set(appData); } catch(e){}
         }
@@ -388,6 +450,27 @@
             resetProjectForm();
             switchTab('pianificazione');
             renderUI();
+            alert('Progetto salvato con successo nella pianificazione!');
+        }
+
+        function editProject(id) {
+            const p = appData.projects.concat(appData.inProgress).find(proj => proj.id == id);
+            if (!p) return;
+            document.getElementById('editing-proj-id').value = p.id;
+            document.getElementById('form-proj-title').innerText = '✏️ Modifica Scheda Progetto';
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-color').value = p.color;
+            document.getElementById('p-enddate').value = p.endDate;
+            document.getElementById('p-link').value = p.link || '';
+
+            const container = document.getElementById('milestones-container');
+            container.innerHTML = '';
+            if (p.milestones && p.milestones.length > 0) {
+                p.milestones.forEach(m => addMilestoneField(m.name, m.subDate || '', m.subtasks ? m.subtasks.join(', ') : ''));
+            } else { addMilestoneField(); }
+
+            closeModal();
+            switchTab('pianificazione');
         }
 
         function startDailySchedule(e) {
@@ -402,7 +485,8 @@
 
             const projIdx = appData.projects.findIndex(p => p.id == projId);
             let proj = projIdx !== -1 ? appData.projects[projIdx] : appData.inProgress.find(p => p.id == projId);
-            
+            if (!proj) return;
+
             if (projIdx !== -1) {
                 appData.projects.splice(projIdx, 1);
                 appData.inProgress.push(proj);
@@ -418,173 +502,13 @@
                 startT,
                 endT,
                 timeframe,
-                days: checkedDays,
-                creationDate: proj.creationDate || new Date().toISOString().split('T')[0],
-                endDate: proj.endDate,
-                milestones: proj.milestones || []
+                days: checkedDays
             };
 
             appData.schedules.push(newSchedule);
-            appData.schedules = cleanDuplicateSchedules(appData.schedules);
             saveToCloud();
-
-            // Flusso Continuo Timer
-            if (!currentActiveSchedule) {
-                startCountdownForSchedule(newSchedule);
-            }
             renderUI();
-        }
-
-        function startCountdownForSchedule(sched) {
-            currentActiveSchedule = sched;
-            document.getElementById('timer-box').classList.remove('hidden');
-            document.getElementById('active-task-title').innerText = `ATTIVITÀ IN CORSO: ${sched.projectName}`;
-            
-            totalTaskSeconds = sched.minutes * 60;
-            remainingSeconds = totalTaskSeconds;
-            totalLostSeconds = 0;
-            isPaused = false;
-            document.getElementById('pause-status-box').classList.add('hidden');
-
-            renderMacroProgressBar();
-            renderInteractiveMilestones();
-
-            if (window.timerInterval) clearInterval(window.timerInterval);
-
-            window.timerInterval = setInterval(() => {
-                if (!isPaused) {
-                    remainingSeconds--;
-                    let m = Math.floor(remainingSeconds / 60);
-                    let s = remainingSeconds % 60;
-                    document.getElementById('countdown-display').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-
-                    if (remainingSeconds <= 0) {
-                        clearInterval(window.timerInterval);
-                        triggerPreAlert("Attività completata. Passaggio automatico al prossimo slot della giornata.");
-                        advanceToNextSchedule();
-                    }
-                }
-            }, 1000);
-        }
-
-        // Calcolo Avanzamento Macro Progetto (Data Avvio ➔ Data Scadenza Finale)
-        function renderMacroProgressBar() {
-            if (!currentActiveSchedule) return;
-
-            const proj = appData.inProgress.concat(appData.projects).find(p => p.id == currentActiveSchedule.projectId) || currentActiveSchedule;
-            
-            const startDate = new Date(proj.creationDate || new Date());
-            const endDate = new Date(proj.endDate);
-            const today = new Date();
-
-            document.getElementById('proj-start-label').innerText = `${startDate.getDate()}/${startDate.getMonth()+1}/${startDate.getFullYear()}`;
-            document.getElementById('proj-end-label').innerText = `${endDate.getDate()}/${endDate.getMonth()+1}/${endDate.getFullYear()}`;
-
-            const totalTimeSpan = Math.max(1, endDate - startDate);
-            const elapsedTime = Math.max(0, today - startDate);
-            let progressPercent = Math.min(100, Math.round((elapsedTime / totalTimeSpan) * 100));
-
-            const progressBar = document.getElementById('active-progress-bar');
-            progressBar.style.width = `${progressPercent}%`;
-
-            // Verifica Ritardi per Milestone Scadute Non Flaggate o Scadenza Progetto Superata
-            let isDelayed = today > endDate;
-            if (proj.milestones) {
-                proj.milestones.forEach(m => {
-                    if (m.subDate && !m.completed) {
-                        if (today > new Date(m.subDate)) isDelayed = true;
-                    }
-                });
-            }
-
-            if (isDelayed) {
-                progressBar.className = "bg-viola-ritardo h-4 rounded-full transition-all duration-500";
-                document.getElementById('proj-status-flag').innerText = "⚠️ IN RITARDO";
-                document.getElementById('proj-status-flag').className = "font-bold text-viola-ritardo";
-            } else {
-                progressBar.className = "bg-indigo-600 h-4 rounded-full transition-all duration-500";
-                document.getElementById('proj-status-flag').innerText = "In Corso";
-                document.getElementById('proj-status-flag').className = "font-bold text-emerald-400";
-            }
-        }
-
-        function renderInteractiveMilestones() {
-            const container = document.getElementById('interactive-milestones-list');
-            container.innerHTML = '<span class="font-bold text-indigo-300 block mb-1">Milestone e Scadenze (Spunta al completamento):</span>';
-            
-            const proj = appData.inProgress.concat(appData.projects).find(p => p.id == currentActiveSchedule.projectId) || currentActiveSchedule;
-            if (!proj.milestones || proj.milestones.length === 0) {
-                container.innerHTML += '<span class="text-slate-500">Nessuna milestone impostata.</span>';
-                return;
-            }
-
-            proj.milestones.forEach((m, idx) => {
-                const isOverdue = m.subDate && (new Date() > new Date(m.subDate)) && !m.completed;
-                container.innerHTML += `
-                    <div class="flex items-center justify-between p-2 rounded bg-slate-800 border ${isOverdue ? 'border-viola-ritardo' : 'border-slate-700'}">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="checkbox" ${m.completed ? 'checked' : ''} onchange="toggleMilestoneComplete(${proj.id}, ${idx})" class="rounded text-indigo-600">
-                            <span class="${m.completed ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}">${m.name}</span>
-                        </label>
-                        <span class="text-[11px] ${isOverdue ? 'text-viola-ritardo font-bold' : 'text-slate-400'}">
-                            ${m.subDate ? `Scadenza: ${m.subDate}` : 'Senza data'} ${isOverdue ? '⚠️ SCADUTA' : ''}
-                        </span>
-                    </div>
-                `;
-            });
-        }
-
-        function toggleMilestoneComplete(projId, milestoneIndex) {
-            const proj = appData.inProgress.concat(appData.projects).find(p => p.id == projId);
-            if (proj && proj.milestones[milestoneIndex]) {
-                proj.milestones[milestoneIndex].completed = !proj.milestones[milestoneIndex].completed;
-                saveToCloud();
-                renderMacroProgressBar();
-                renderInteractiveMilestones();
-            }
-        }
-
-        function advanceToNextSchedule() {
-            if (appData.schedules.length > 0) {
-                const nextSched = appData.schedules.shift();
-                saveToCloud();
-                startCountdownForSchedule(nextSched);
-            } else {
-                document.getElementById('timer-box').classList.add('hidden');
-                currentActiveSchedule = null;
-                alert('Tutti gli slot della giornata sono stati completati!');
-            }
-        }
-
-        function handlePauseResume() {
-            const pauseBtn = document.getElementById('pause-btn');
-            const statusBox = document.getElementById('pause-status-box');
-
-            if (!isPaused) {
-                isPaused = true;
-                pauseBtn.innerText = 'Riprendi';
-                statusBox.classList.remove('hidden');
-                lostTimerInterval = setInterval(() => {
-                    totalLostSeconds++;
-                    document.getElementById('lost-time-display').innerText = `${totalLostSeconds}s`;
-                }, 1000);
-            } else {
-                clearInterval(lostTimerInterval);
-                const choice = confirm(`Timer ripreso dopo ${totalLostSeconds} secondi di pausa.\n\n[OK] per SLITTARE il flusso continuo.\n[ANNULLA] per COMPRIMERE la durata.`);
-                isPaused = false;
-                pauseBtn.innerText = 'Pausa';
-                statusBox.classList.add('hidden');
-            }
-        }
-
-        function completeActiveTask() {
-            if (!currentActiveSchedule) return;
-            clearInterval(window.timerInterval);
-            
-            currentActiveSchedule.completedAt = new Date().toLocaleDateString();
-            appData.archive.push(currentActiveSchedule);
-            advanceToNextSchedule();
-            renderUI();
+            alert('Slot inserito correttamente nella griglia settimanale!');
         }
 
         function renderUI() {
@@ -599,7 +523,34 @@
                 });
             }
 
-            // Vista Settimanale in Ordine Cronologico (Lun-Dom)
+            const plannedList = document.getElementById('planned-projects-list');
+            if(plannedList) {
+                plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in pianificazione.</p>' : '';
+                appData.projects.forEach(p => {
+                    plannedList.innerHTML += `
+                        <div class="bg-slate-900 p-4 rounded border border-slate-700 space-y-2 cursor-pointer hover:border-indigo-500" onclick="openDetailModal(${p.id})">
+                            <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
+                            <p class="text-xs text-slate-400">Scadenza Presunta: ${p.endDate}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            const inProgVert = document.getElementById('in-progress-projects-list');
+            if(inProgVert) {
+                inProgVert.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto attivo.</p>' : '';
+                appData.inProgress.forEach(p => {
+                    inProgVert.innerHTML += `
+                        <div onclick="openDetailModal(${p.id})" class="bg-slate-900 p-4 rounded border border-slate-700 hover:border-indigo-500 cursor-pointer space-y-2 shadow">
+                            <span class="font-bold text-sm block" style="color: ${p.color}">${p.name}</span>
+                            <p class="text-xs text-slate-400">Scadenza Presunta: ${p.endDate}</p>
+                            <span class="text-[10px] bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800">Scheda e Modifica</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // Calendario Settimanale Ordinato e senza duplicati
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
             if(grid) {
@@ -611,8 +562,6 @@
                     const dateStr = `${d.getDate()}/${d.getMonth()+1}`;
 
                     let dayTasks = appData.schedules.filter(s => s.days && s.days.includes(day));
-                    
-                    // Ordina per Orario di Inizio (es. 09:00 prima di 10:00)
                     dayTasks.sort((a, b) => (a.startT || "00:00").localeCompare(b.startT || "00:00"));
 
                     let tasksHtml = dayTasks.map(t => `
@@ -628,25 +577,6 @@
                             ${tasksHtml || '<span class="text-[10px] text-slate-600 block text-center mt-6">Libero</span>'}
                         </div>
                     `;
-                });
-            }
-
-            // Progetti in Corso
-            const inProgHoriz = document.getElementById('horizontal-in-progress-list');
-            const inProgVert = document.getElementById('in-progress-projects-list');
-            if(inProgHoriz && inProgVert) {
-                inProgHoriz.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto attivo.</p>' : '';
-                inProgVert.innerHTML = inProgHoriz.innerHTML;
-                appData.inProgress.forEach(p => {
-                    const cardHtml = `
-                        <div onclick="openDetailModal(${p.id})" class="bg-slate-900 p-4 rounded border border-slate-700 hover:border-indigo-500 cursor-pointer space-y-2 shadow">
-                            <span class="font-bold text-sm block" style="color: ${p.color}">${p.name}</span>
-                            <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
-                            <span class="text-[10px] bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-800">Scheda e Modifica</span>
-                        </div>
-                    `;
-                    inProgHoriz.innerHTML += cardHtml;
-                    inProgVert.innerHTML += cardHtml;
                 });
             }
         }
@@ -669,14 +599,24 @@
                 <div class="mt-3"><span class="text-xs font-bold text-indigo-300">Milestone:</span>${milestonesHtml || '<p class="text-xs text-slate-500">Nessuna</p>'}</div>
                 <div class="mt-3"><span class="text-xs font-bold text-amber-400">Note Vocali:</span>${notesHtml || '<p class="text-xs text-slate-500">Nessuna nota</p>'}</div>
             `;
+            document.getElementById('modal-edit-btn').setAttribute('onclick', `editProject(${proj.id})`);
             document.getElementById('detail-modal').classList.remove('hidden');
         }
 
         function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
 
-        // Sincronizzazione Google Calendar
-        function syncGoogleCalendar() {
-            alert("Lettura di Google Calendar attivata. Gli impegni salvati su Google Calendar prendono la priorità sugli slot liberi.");
+        function resetProjectForm() {
+            document.getElementById('project-form').reset();
+            document.getElementById('editing-proj-id').value = '';
+            document.getElementById('form-proj-title').innerText = '📁 Nuova Scheda Progetto';
+            document.getElementById('milestones-container').innerHTML = `
+                <div class="bg-slate-900 p-3 rounded border border-slate-700 space-y-2 milestone-block">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input type="text" placeholder="Nome Milestone" class="m-name w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                        <input type="date" placeholder="Scadenza Milestone" class="m-subdate w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                    </div>
+                    <input type="text" placeholder="Sub-task (separate da virgola)" class="m-sub w-full bg-slate-800 border border-slate-700 rounded p-1.5 text-xs">
+                </div>`;
         }
 
         function triggerMorningBriefing() {
@@ -688,13 +628,38 @@
             }
         }
 
-        function triggerPreAlert(customMsg) {
+        function triggerPreAlert() {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(customMsg || "Attenzione. Tra trenta secondi si avvia il prossimo slot.");
+                const utterance = new SpeechSynthesisUtterance("Attenzione. Tra trenta secondi si avvia il prossimo slot.");
                 utterance.lang = 'it-IT';
                 window.speechSynthesis.speak(utterance);
             }
+        }
+
+        function toggleVoiceRecording() {
+            const textArea = document.getElementById('voice-note-text');
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Riconoscimento vocale non supportato.');
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'it-IT';
+            recognition.onresult = function(e) { textArea.value = e.results[0][0].transcript; };
+            recognition.start();
+            alert('Ascolto in corso... Parla ora.');
+        }
+
+        function saveVoiceNote() {
+            const projId = document.getElementById('note-project-select').value;
+            const text = document.getElementById('voice-note-text').value;
+            if(!projId || !text) return alert('Seleziona un progetto e inserisci il testo.');
+            appData.notes.push({ projId, text, date: new Date().toLocaleDateString() });
+            saveToCloud();
+            document.getElementById('voice-note-text').value = '';
+            renderUI();
+            alert('Nota vocale salvata!');
         }
     </script>
 </body>
