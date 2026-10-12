@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Final Fixed Engine</title>
+    <title>WorkBlocker PRO - Master Engine Verified</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-magenta-critical { background-color: #d946ef !important; }
         .text-magenta-critical { color: #d946ef !important; }
         .bg-viola-delay { background-color: #8b5cf6 !important; }
         .text-viola-delay { color: #8b5cf6 !important; }
-        .bg-verde-anticipo { background-color: #059669 !important; }
         .bg-verde-intenso { background-color: #10b981 !important; }
         
         .rotate-45-label {
@@ -18,7 +17,7 @@
             transform-origin: 0 100%;
             white-space: nowrap;
             font-size: 8px;
-            line-height: 1.1;
+            line-height: 1.15;
         }
     </style>
 </head>
@@ -29,7 +28,7 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Engine Ripristinato</span>
+            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Protetto & Verificato</span>
         </div>
         <div class="flex items-center space-x-2">
             <button type="button" onclick="exportDataJSON()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">📥 Esporta Backup</button>
@@ -60,7 +59,7 @@
             <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div class="flex items-center space-x-2">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span id="pulse-dot" class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
                         <h2 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Monitoraggio Attività & Avanzamento Temporale</h2>
                     </div>
                     <span id="current-clock" class="text-xs font-mono text-slate-400"></span>
@@ -207,25 +206,25 @@
             { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        // --- RIPRISTINO ED UNIFICAZIONE DATI DA TUTTE LE CHIAVI DI SALVATAGGIO ---
-        function recoverAllData() {
+        // --- SISTEMA DI RECUPERO BLINDATO (Fonde tutte le vecchie chiavi senza perdere dati) ---
+        function loadAndMergeAllData() {
             const keys = ['wb_master_v8', 'wb_perfect_v7', 'wb_ultimate_v6', 'wb_temporal_v5', 'wb_milestones_v4', 'wb_safe_v3', 'wb_complete_v2'];
-            let merged = { projects: [], inProgress: [], schedules: [], notes: [], showMilestonesPanel: false };
+            let merged = { projects: [], inProgress: [], schedules: [], notes: [], showMilestonesPanel: false, isPaused: false };
 
             keys.forEach(k => {
                 const item = localStorage.getItem(k);
                 if (item) {
                     try {
                         const parsed = JSON.parse(item);
-                        if (parsed.projects && parsed.projects.length) merged.projects = merged.projects.concat(parsed.projects);
-                        if (parsed.inProgress && parsed.inProgress.length) merged.inProgress = merged.inProgress.concat(parsed.inProgress);
-                        if (parsed.schedules && parsed.schedules.length) merged.schedules = merged.schedules.concat(parsed.schedules);
-                        if (parsed.notes && parsed.notes.length) merged.notes = merged.notes.concat(parsed.notes);
+                        if (parsed.projects) merged.projects = merged.projects.concat(parsed.projects);
+                        if (parsed.inProgress) merged.inProgress = merged.inProgress.concat(parsed.inProgress);
+                        if (parsed.schedules) merged.schedules = merged.schedules.concat(parsed.schedules);
+                        if (parsed.notes) merged.notes = merged.notes.concat(parsed.notes);
                     } catch(e) {}
                 }
             });
 
-            // Se non trova dati precedenti, imposta quelli base
+            // Default se vuoto
             if (merged.projects.length === 0 && merged.inProgress.length === 0) {
                 merged.projects = [
                     { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', note:'', completed:false}] }
@@ -248,8 +247,10 @@
             return merged;
         }
 
-        let appData = recoverAllData();
-        let mainClockInterval = null, lastAlertMin = -1;
+        let appData = loadAndMergeAllData();
+        let mainClockInterval = null;
+        let lastAlertMin = -1;
+        let lastEndMin = -1;
 
         document.addEventListener("DOMContentLoaded", () => {
             calculateEndTime();
@@ -288,37 +289,59 @@
             }
         }
 
+        // --- GESTIONE TIMER E SINTESI VOCALE AUTOMATICA ---
         function startMainClock() {
             if (mainClockInterval) clearInterval(mainClockInterval);
             mainClockInterval = setInterval(() => {
                 const now = new Date();
                 const clockEl = document.getElementById('current-clock');
                 if (clockEl) clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                updateActiveTracker(now);
-                checkVoicePreAlert(now);
+                
+                if (!appData.isPaused) {
+                    updateActiveTracker(now);
+                    checkVoiceAlerts(now);
+                }
             }, 1000);
         }
 
-        function checkVoicePreAlert(now) {
+        function checkVoiceAlerts(now) {
             const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            
             appData.schedules.forEach(sc => {
                 const [startH, startM] = sc.startT.split(':').map(Number);
+                const [endH, endM] = sc.endT.split(':').map(Number);
+
+                // Pre-avviso 30 secondi prima dell'inizio
                 if (h === startH && m === startM - 1 && s === 30) {
                     if (lastAlertMin !== m) {
                         lastAlertMin = m;
-                        playPreAlertSpeech(`Attenzione. Tra trenta secondi si avvia l'attività ${sc.projectName}.`);
+                        speakText(`Attenzione. Tra trenta secondi si avvia l'attività ${sc.projectName}.`);
+                    }
+                }
+
+                // Avviso completamento slot alla fine
+                if (h === endH && m === endM && s === 0) {
+                    if (lastEndMin !== m) {
+                        lastEndMin = m;
+                        speakText(`Attività ${sc.projectName} completata.`);
                     }
                 }
             });
         }
 
-        function playPreAlertSpeech(text) {
+        function speakText(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'it-IT';
                 window.speechSynthesis.speak(u);
             }
+        }
+
+        function togglePause() {
+            appData.isPaused = !appData.isPaused;
+            saveData();
+            renderUI();
         }
 
         function addMinutesToTime(timeStr, mins) {
@@ -372,7 +395,11 @@
             }
 
             if (!active && appData.inProgress.length === 0 && appData.schedules.length === 0) {
-                container.innerHTML = `<div class="text-slate-400 text-sm py-4 text-center">Nessuna attività programmata. Prossima attività domani ore 08:30.</div>`;
+                container.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400 text-sm">Nessuna attività in corso. Prossima attività programmata domani ore 08:30.</span>
+                        <button onclick="togglePause()" class="px-3 py-1 rounded text-xs ${appData.isPaused ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'}">${appData.isPaused ? '▶ Riprendi Timer' : '⏸ Metti in Pausa'}</button>
+                    </div>`;
                 return;
             }
 
@@ -421,6 +448,7 @@
                     }
                 }
 
+                // Spaziatura superiore protetta per evitare sovrapposizioni delle etichette a 45°
                 let timelineMarkersHtml = '';
                 if (!isCal && (proj.milestones || []).length > 0) {
                     timelineMarkersHtml = (proj.milestones || []).map((m, idx) => {
@@ -430,11 +458,11 @@
                             posPercent = Math.min(95, Math.max(5, Math.round(((subTs - startTs) / totalDuration) * 100)));
                         }
                         const mod = idx % 3;
-                        const topOffset = mod === 0 ? '-top-20' : (mod === 1 ? '-top-14' : '-top-8');
+                        const topOffset = mod === 0 ? '-top-24' : (mod === 1 ? '-top-16' : '-top-8');
                         return `
                             <div class="absolute top-0 flex flex-col items-center cursor-pointer group" style="left: ${posPercent}%;" onclick="toggleMilestonesPanel()">
                                 <div class="w-3 h-3 -mt-1 rounded-full border-2 border-slate-900 ${m.completed ? 'bg-emerald-400' : 'bg-amber-400'} shadow"></div>
-                                <div class="absolute ${topOffset} text-[8px] text-slate-200 rotate-45-label font-medium bg-slate-900/95 px-1 py-0.5 rounded border border-slate-700 shadow">
+                                <div class="absolute ${topOffset} text-[8px] text-slate-200 rotate-45-label font-medium bg-slate-900/95 px-1.5 py-1 rounded border border-slate-700 shadow">
                                     ${m.name}<br>Scad: ${m.subDate || 'N/D'}
                                 </div>
                             </div>
@@ -461,19 +489,22 @@
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <h3 class="text-xl font-bold uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${active.name || proj.projectName || proj.name}</h3>
-                        <span class="text-xs px-2 py-1 rounded ${isCal ? 'bg-blue-900 text-blue-200' : 'bg-indigo-900 text-indigo-200'} font-semibold">${isCal ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="togglePause()" class="px-3 py-1 rounded text-xs ${appData.isPaused ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'}">${appData.isPaused ? '▶ Riprendi' : '⏸ Pausa'}</button>
+                            <span class="text-xs px-2 py-1 rounded ${isCal ? 'bg-blue-900 text-blue-200' : 'bg-indigo-900 text-indigo-200'} font-semibold">${isCal ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
+                        </div>
                     </div>
-                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO ORA' : `⏳ PROSSIMA ATTIVITÀ PROGRAMMATA PER LE ORE ${active.startT}`})</div>
+                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO ORA' : `⏳ PROSSIMA ATTIVITÀ PER LE ORE ${active.startT}`})</div>
                     
                     ${!isCal ? `
-                    <div class="w-full space-y-2 pt-16 pb-6">
+                    <div class="w-full space-y-2 pt-20 pb-6">
                         <div class="relative w-full bg-slate-700 h-3 rounded-full cursor-pointer shadow-inner" onclick="toggleMilestonesPanel()" title="Clicca sulla barra per aprire le milestone">
                             <div class="${barColorClass} h-3 rounded-full transition-all duration-500" style="width: ${timeProgressPercent}%;"></div>
                             ${timelineMarkersHtml}
                         </div>
                         <div class="flex justify-between items-center pt-3 text-xs">
                             <span>Avvio: ${proj.creationDate || '2026-10-01'}</span>
-                            <span class="font-bold text-indigo-300 cursor-pointer hover:underline" onclick="toggleMilestonesPanel()">🔍 ${statusText} - Tempo:${timeProgressPercent}% (Clicca per Milestone)</span>
+                            <span class="font-bold text-indigo-300 cursor-pointer hover:underline" onclick="toggleMilestonesPanel()">🔍 ${statusText} - Tempo:${timeProgressPercent}% (Clicca la barra per le Milestone)</span>
                             <span>Scadenza: ${proj.endDate || '2026-12-31'}</span>
                         </div>
                     </div>` : ''}
@@ -487,8 +518,6 @@
                         ${milestonesListHtml}
                     </div>` : ''}
                 `;
-            } else {
-                container.innerHTML = `<div class="text-slate-400 text-sm py-4 text-center">Nessuna attività programmata per il resto della giornata. Prossima attività domani ore 08:30.</div>`;
             }
         }
 
@@ -665,7 +694,6 @@
                 });
             }
 
-            // Pianificati
             const plannedList = document.getElementById('planned-projects-list');
             if(plannedList) {
                 plannedList.innerHTML = appData.projects.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto in attesa.</p>' : '';
@@ -684,7 +712,6 @@
                 });
             }
 
-            // In Corso
             const inProgVert = document.getElementById('in-progress-projects-list');
             if(inProgVert) {
                 inProgVert.innerHTML = appData.inProgress.length === 0 ? '<p class="text-xs text-slate-400">Nessun progetto attivo in corso.</p>' : '';
@@ -703,7 +730,6 @@
                 });
             }
 
-            // GRIGLIA SETTIMANALE
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
             if(grid) {
@@ -746,11 +772,11 @@
         }
 
         function triggerMorningBriefing() {
-            playPreAlertSpeech("Buongiorno Matteo. Tutti i progetti e gli impegni della settimana sono caricati correttamente.");
+            speakText("Buongiorno Matteo. Tutti i progetti e gli impegni della settimana sono caricati correttamente.");
         }
 
         function triggerPreAlert() {
-            playPreAlertSpeech("Attenzione. Tra trenta secondi si avvia il prossimo slot programmato.");
+            speakText("Attenzione. Tra trenta secondi si avvia il prossimo slot programmato.");
         }
 
         function saveVoiceNote() {
