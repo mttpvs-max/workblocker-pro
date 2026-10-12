@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Ultimate Engine</title>
+    <title>WorkBlocker PRO - Master Engine v8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-magenta-critical { background-color: #d946ef !important; }
@@ -15,13 +15,10 @@
         
         .rotate-45-label {
             transform: rotate(-45deg);
-            transform-origin: left bottom;
+            transform-origin: 0 100%;
             white-space: nowrap;
-            font-size: 9px;
+            font-size: 8px;
             line-height: 1.1;
-            max-width: 120px;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -32,7 +29,7 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Motore Definitivo</span>
+            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">v8 Master Engine</span>
         </div>
         <div class="flex items-center space-x-2">
             <button type="button" onclick="exportDataJSON()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">📥 Esporta Backup</button>
@@ -210,22 +207,10 @@
             { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        const defaultPlanned = [
-            { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', note:'', completed:false}] }
-        ];
-
-        const defaultInProgress = [
-            { id: 101, name: 'App Work Bloker ODAP', color: '#6366f1', endDate: '2026-12-31', creationDate: '2026-10-01', milestones: [{name:'Setup e Refactoring Engine', subDate:'2026-10-20', note:'', completed:false}] },
-            { id: 103, name: 'ODAP - Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', creationDate: '2026-10-01', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', note:'Avanzamento regolare', completed:true}] }
-        ];
-
-        let appData = JSON.parse(localStorage.getItem('wb_ultimate_v6')) || {
-            projects: defaultPlanned,
-            inProgress: defaultInProgress,
-            schedules: [
-                { id: 201, projectId: 101, projectName: 'App Work Bloker ODAP', color: '#6366f1', executor: 'Matteo Pavese', startT: '08:30', endT: '09:30', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] },
-                { id: 202, projectId: 103, projectName: 'ODAP - Ristruttura studio', color: '#22c55e', executor: 'Matteo Pavese', startT: '14:00', endT: '16:00', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] }
-            ],
+        let appData = JSON.parse(localStorage.getItem('wb_master_v8')) || {
+            projects: [],
+            inProgress: [],
+            schedules: [],
             notes: [],
             showMilestonesPanel: false
         };
@@ -239,7 +224,7 @@
         });
 
         function saveData() {
-            localStorage.setItem('wb_ultimate_v6', JSON.stringify(appData));
+            localStorage.setItem('wb_master_v8', JSON.stringify(appData));
         }
 
         function exportDataJSON() {
@@ -332,7 +317,7 @@
         }
 
         function updateActiveTracker(now) {
-            const container = document.getElementById('active-tracker-container');
+            const container = document.getElementById('active-tracker-content');
             if (!container) return;
 
             const daysMap = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
@@ -352,14 +337,11 @@
                 active = todayEvents.find(e => e.startT > currentTimeStr);
             }
 
-            // Se non ci sono progetti in corso o attività attive
             if (!active && appData.inProgress.length === 0 && appData.schedules.length === 0) {
                 container.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                        <h2 class="text-md font-bold text-slate-400 uppercase tracking-wider">Nessun Progetto o Attività in Corso</h2>
-                        <span id="current-clock" class="text-xs font-mono text-slate-400"></span>
+                    <div class="text-slate-400 text-sm py-4 text-center">
+                        Nessuna attività in corso. Prossima attività programmata domani ore 08:30.
                     </div>
-                    <div class="text-slate-400 text-sm py-4 text-center">Nessuna attività programmata. Pianifica un nuovo progetto o imposta uno slot settimanale.</div>
                 `;
                 return;
             }
@@ -385,7 +367,7 @@
                     let hasUncompletedPassedMilestone = false;
                     let hasAnticipatedMilestone = false;
 
-                    // Ordina sempre le milestone per data cronologica
+                    // Forza sempre l'ordinamento cronologico
                     if (proj.milestones) {
                         proj.milestones.sort((a, b) => new Date(a.subDate || '2099-12-31') - new Date(b.subDate || '2099-12-31'));
                     }
@@ -410,7 +392,7 @@
                     }
                 }
 
-                // Markers Milestone inclinati a 45° con posizionamento alternato su 2 righe
+                // Markers su tre righe ordinate e distanziate visivamente
                 let timelineMarkersHtml = '';
                 if (!isCal && (proj.milestones || []).length > 0) {
                     timelineMarkersHtml = (proj.milestones || []).map((m, idx) => {
@@ -419,13 +401,13 @@
                             const subTs = new Date(m.subDate).getTime();
                             posPercent = Math.min(95, Math.max(5, Math.round(((subTs - startTs) / totalDuration) * 100)));
                         }
-                        const isEven = idx % 2 === 0;
-                        const topClass = isEven ? 'top-5' : 'top-10';
+                        const mod = idx % 3;
+                        const topOffset = mod === 0 ? '-top-20' : (mod === 1 ? '-top-14' : '-top-8');
                         return `
                             <div class="absolute top-0 flex flex-col items-center cursor-pointer group" style="left: ${posPercent}%;" onclick="toggleMilestonesPanel()">
                                 <div class="w-3 h-3 -mt-1 rounded-full border-2 border-slate-900 ${m.completed ? 'bg-emerald-400' : 'bg-amber-400'} shadow"></div>
-                                <div class="absolute ${topClass} text-[10px] text-slate-200 rotate-45-label font-medium bg-slate-900/90 px-1 py-0.5 rounded border border-slate-700">
-                                    ${m.name} (${m.subDate || ''})
+                                <div class="absolute ${topOffset} text-[8px] text-slate-200 rotate-45-label font-medium bg-slate-900/95 px-1 py-0.5 rounded border border-slate-700 shadow">
+                                    ${m.name}<br>Scad: ${m.subDate || 'N/D'}
                                 </div>
                             </div>
                         `;
@@ -456,23 +438,23 @@
                     <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO ORA' : `⏳ PROSSIMA ATTIVITÀ PROGRAMMATA PER LE ORE ${active.startT}`})</div>
                     
                     ${!isCal ? `
-                    <div class="w-full space-y-2 pt-2 pb-14">
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>Avvio: ${proj.creationDate || '2026-10-01'}</span>
-                            <span class="font-bold cursor-pointer text-indigo-300 hover:underline" onclick="toggleMilestonesPanel()" title="Clicca per aprire/chiudere le milestone">🔍 ${statusText} - Tempo:${timeProgressPercent}% (Clicca la barra per le Milestone)</span>
-                            <span>Scadenza: ${proj.endDate || '2026-12-31'}</span>
-                        </div>
-                        <div class="relative w-full bg-slate-700 h-3 rounded-full cursor-pointer shadow-inner" onclick="toggleMilestonesPanel()" title="Clicca per mostrare/nascondere le milestone">
+                    <div class="w-full space-y-2 pt-16 pb-6">
+                        <div class="relative w-full bg-slate-700 h-3 rounded-full cursor-pointer shadow-inner" onclick="toggleMilestonesPanel()" title="Clicca sulla barra per aprire le milestone">
                             <div class="${barColorClass} h-3 rounded-full transition-all duration-500" style="width: ${timeProgressPercent}%;"></div>
                             ${timelineMarkersHtml}
+                        </div>
+                        <div class="flex justify-between items-center pt-3 text-xs">
+                            <span>Avvio: ${proj.creationDate || '2026-10-01'}</span>
+                            <span class="font-bold text-indigo-300 cursor-pointer hover:underline" onclick="toggleMilestonesPanel()">🔍 ${statusText} - Tempo:${timeProgressPercent}% (Clicca per Milestone)</span>
+                            <span>Scadenza: ${proj.endDate || '2026-12-31'}</span>
                         </div>
                     </div>` : ''}
 
                     ${!isCal && appData.showMilestonesPanel ? `
-                    <div class="w-full space-y-2 pt-4 border-t border-slate-700 animate-fadeIn">
+                    <div class="w-full space-y-2 pt-4 border-t border-slate-700">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-bold text-indigo-300">Milestones, Note & Cambi Programma (Ordinate per data):</span>
-                            <button type="button" onclick="toggleMilestonesPanel()" class="text-[11px] text-slate-400 hover:text-white">❌ Chiudi Pannello</button>
+                            <button type="button" onclick="toggleMilestonesPanel()" class="text-[11px] text-slate-400 hover:text-white">❌ Chiudi</button>
                         </div>
                         ${milestonesListHtml}
                     </div>` : ''}
@@ -546,7 +528,6 @@
                 completed: false
             })).filter(m => m.name.trim() !== '');
 
-            // Ordina automaticamente le milestone per data
             milestones.sort((a, b) => new Date(a.subDate || '2099-12-31') - new Date(b.subDate || '2099-12-31'));
 
             if (editId) {
