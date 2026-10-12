@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Recovery Engine v8</title>
+    <title>WorkBlocker PRO - Final Fixed Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-magenta-critical { background-color: #d946ef !important; }
@@ -29,7 +29,7 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Ripristino Automatico Attivo</span>
+            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Engine Ripristinato</span>
         </div>
         <div class="flex items-center space-x-2">
             <button type="button" onclick="exportDataJSON()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">📥 Esporta Backup</button>
@@ -207,35 +207,48 @@
             { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        // --- RIPRISTINO AUTOMATICO DA TUTTE LE CHIAVI PRECEDENTI ---
-        function recoverAllPreviousData() {
+        // --- RIPRISTINO ED UNIFICAZIONE DATI DA TUTTE LE CHIAVI DI SALVATAGGIO ---
+        function recoverAllData() {
             const keys = ['wb_master_v8', 'wb_perfect_v7', 'wb_ultimate_v6', 'wb_temporal_v5', 'wb_milestones_v4', 'wb_safe_v3', 'wb_complete_v2'];
-            let mergedData = { projects: [], inProgress: [], schedules: [], notes: [], showMilestonesPanel: false };
+            let merged = { projects: [], inProgress: [], schedules: [], notes: [], showMilestonesPanel: false };
 
             keys.forEach(k => {
                 const item = localStorage.getItem(k);
                 if (item) {
                     try {
                         const parsed = JSON.parse(item);
-                        if (parsed.projects) mergedData.projects = mergedData.projects.concat(parsed.projects);
-                        if (parsed.inProgress) mergedData.inProgress = mergedData.inProgress.concat(parsed.inProgress);
-                        if (parsed.schedules) mergedData.schedules = mergedData.schedules.concat(parsed.schedules);
-                        if (parsed.notes) mergedData.notes = mergedData.notes.concat(parsed.notes);
+                        if (parsed.projects && parsed.projects.length) merged.projects = merged.projects.concat(parsed.projects);
+                        if (parsed.inProgress && parsed.inProgress.length) merged.inProgress = merged.inProgress.concat(parsed.inProgress);
+                        if (parsed.schedules && parsed.schedules.length) merged.schedules = merged.schedules.concat(parsed.schedules);
+                        if (parsed.notes && parsed.notes.length) merged.notes = merged.notes.concat(parsed.notes);
                     } catch(e) {}
                 }
             });
 
-            // Rimuovi duplicati per ID
+            // Se non trova dati precedenti, imposta quelli base
+            if (merged.projects.length === 0 && merged.inProgress.length === 0) {
+                merged.projects = [
+                    { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', note:'', completed:false}] }
+                ];
+                merged.inProgress = [
+                    { id: 101, name: 'App Work Bloker ODAP', color: '#6366f1', endDate: '2026-12-31', creationDate: '2026-10-01', milestones: [{name:'Setup e Refactoring Engine', subDate:'2026-10-20', note:'', completed:false}] },
+                    { id: 103, name: 'ODAP - Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', creationDate: '2026-10-01', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', note:'Avanzamento regolare', completed:true}] }
+                ];
+                merged.schedules = [
+                    { id: 201, projectId: 101, projectName: 'App Work Bloker ODAP', color: '#6366f1', executor: 'Matteo Pavese', startT: '08:30', endT: '09:30', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] },
+                    { id: 202, projectId: 103, projectName: 'ODAP - Ristruttura studio', color: '#22c55e', executor: 'Matteo Pavese', startT: '14:00', endT: '16:00', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] }
+                ];
+            }
+
             const uniqueById = (arr) => Array.from(new Map(arr.map(item => [item.id, item])).values());
-            mergedData.projects = uniqueById(mergedData.projects);
-            mergedData.inProgress = uniqueById(mergedData.inProgress);
-            mergedData.schedules = uniqueById(mergedData.schedules);
-            
-            return mergedData;
+            merged.projects = uniqueById(merged.projects);
+            merged.inProgress = uniqueById(merged.inProgress);
+            merged.schedules = uniqueById(merged.schedules);
+
+            return merged;
         }
 
-        let appData = recoverAllPreviousData();
-
+        let appData = recoverAllData();
         let mainClockInterval = null, lastAlertMin = -1;
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -359,11 +372,7 @@
             }
 
             if (!active && appData.inProgress.length === 0 && appData.schedules.length === 0) {
-                container.innerHTML = `
-                    <div class="text-slate-400 text-sm py-4 text-center">
-                        Nessuna attività in corso. Prossima attività programmata domani ore 08:30.
-                    </div>
-                `;
+                container.innerHTML = `<div class="text-slate-400 text-sm py-4 text-center">Nessuna attività programmata. Prossima attività domani ore 08:30.</div>`;
                 return;
             }
 
@@ -479,7 +488,7 @@
                     </div>` : ''}
                 `;
             } else {
-                container.innerHTML = `<div class="text-slate-400 text-sm py-4 text-center">Nessuna attività programmata per il resto della giornata. Prossima attività programmata domani ore 08:30.</div>`;
+                container.innerHTML = `<div class="text-slate-400 text-sm py-4 text-center">Nessuna attività programmata per il resto della giornata. Prossima attività domani ore 08:30.</div>`;
             }
         }
 
