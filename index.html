@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Final Stable Version</title>
+    <title>WorkBlocker PRO - Final Clean Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         .bg-viola-ritardo { background-color: #8b5cf6 !important; }
         .text-viola-ritardo { color: #8b5cf6 !important; }
-        .milestone-label-45 {
-            transform: rotate(-45deg);
-            transform-origin: left bottom;
-            white-space: nowrap;
-        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
@@ -24,11 +19,12 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Online</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
-            <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
+            <button type="button" onclick="resetDatabaseDuplicates()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🗑️ Pulisci Duplicati</button>
+            <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">☀️ Briefing</button>
+            <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
     </header>
 
@@ -47,7 +43,7 @@
         <!-- DASHBOARD SETTIMANALE -->
         <div id="section-dashboard" class="space-y-6">
 
-            <!-- ATTIVITÀ IN CORSO / BARRA DI AVANZAMENTO -->
+            <!-- MONITORAGGIO ATTIVITÀ & BARRA AVANZAMENTO -->
             <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div class="flex items-center space-x-2">
@@ -61,7 +57,7 @@
                 </div>
             </div>
 
-            <!-- Vista Settimanale Ordinata (Lun-Dom) Senza Duplicati -->
+            <!-- VISTA SETTIMANALE (Senza Duplicati e Ordinata) -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Lunedì - Domenica)</h2>
@@ -70,7 +66,7 @@
                 <div id="weekly-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
             </div>
 
-            <!-- Form Inserimento Programmazione Giornaliera -->
+            <!-- FORM PROGRAMMAZIONE GIORNALIERA -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
                 <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci in Programmazione Settimanale</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="space-y-4">
@@ -265,16 +261,22 @@
             const todayDay = daysMap[now.getDay()];
             const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            const activeSchedule = appData.schedules.find(s => {
+            // Cerca lo slot attivo oppure prende l'ultimo/prossimo programmato oggi per non lasciare vuoto
+            let activeSchedule = appData.schedules.find(s => {
                 if (!s.days || !s.days.includes(todayDay)) return false;
                 return currentTimeStr >= s.startT && currentTimeStr <= s.endT;
             });
+
+            if (!activeSchedule && appData.schedules.length > 0) {
+                // Fallback: mostra il primo della lista odierna se nessun orario combacia al minuto esatto
+                activeSchedule = appData.schedules.find(s => s.days && s.days.includes(todayDay)) || appData.schedules[0];
+            }
 
             if (activeSchedule) {
                 const proj = appData.inProgress.concat(appData.projects).find(p => p.id == activeSchedule.projectId) || activeSchedule;
                 
                 const startDate = new Date(proj.creationDate || now);
-                const endDate = new Date(proj.endDate);
+                const endDate = new Date(proj.endDate || new Date());
                 const totalSpan = Math.max(1, endDate - startDate);
                 const elapsed = Math.max(0, now - startDate);
                 let progressPercent = Math.min(100, Math.round((elapsed / totalSpan) * 100));
@@ -297,8 +299,8 @@
                 `).join('');
 
                 container.innerHTML = `
-                    <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color}">${proj.name}</h3>
-                    <div class="text-xs text-slate-300">Slot Attivo: <b>${activeSchedule.startT} - ${activeSchedule.endT}</b> | Esecutore: ${activeSchedule.executor}</div>
+                    <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#4f46e5'}">${proj.name || activeSchedule.projectName}</h3>
+                    <div class="text-xs text-slate-300">Slot Programmato: <b>${activeSchedule.startT} - ${activeSchedule.endT}</b> | Esecutore: ${activeSchedule.executor || 'Matteo'}</div>
                     
                     <div class="w-full space-y-1">
                         <div class="flex justify-between text-xs text-slate-400">
@@ -319,7 +321,7 @@
             } else {
                 container.innerHTML = `
                     <div class="text-slate-400 text-sm py-3 text-center">
-                        <span>☕ Nessun slot orario attivo in questo momento (${currentTimeStr}). L'app è in ascolto per la prossima attività programmata.</span>
+                        <span>☕ Nessuna attività pianificata. Inserisci un progetto nella programmazione sottostante.</span>
                     </div>
                 `;
             }
@@ -343,7 +345,7 @@
                     if (data) {
                         appData = {
                             projects: data.projects || [],
-                            inProgress: data.inProgress || [],
+                            inProgress: cleanDuplicateProjects(data.inProgress || []),
                             schedules: cleanDuplicateSchedules(data.schedules || []),
                             archive: data.archive || [],
                             notes: data.notes || []
@@ -359,10 +361,29 @@
         function cleanDuplicateSchedules(schedules) {
             const map = new Map();
             schedules.forEach(s => {
-                const key = `${s.projectId}-${s.startT}-${s.endT}-${(s.days||[]).join('')}`;
+                const key = `${s.projectId}-${s.startT}-${s.endT}-${(s.days||[]).sort().join('')}`;
                 if (!map.has(key)) map.set(key, s);
             });
             return Array.from(map.values());
+        }
+
+        function cleanDuplicateProjects(projects) {
+            const map = new Map();
+            projects.forEach(p => {
+                if (!map.has(p.id)) map.set(p.id, p);
+            });
+            return Array.from(map.values());
+        }
+
+        function resetDatabaseDuplicates() {
+            if (confirm("Vuoi ripulire tutti i duplicati dalla griglia e dal database?")) {
+                appData.schedules = cleanDuplicateSchedules(appData.schedules);
+                appData.projects = cleanDuplicateProjects(appData.projects);
+                appData.inProgress = cleanDuplicateProjects(appData.inProgress);
+                saveToCloud();
+                renderUI();
+                alert("Duplicati rimossi con successo!");
+            }
         }
 
         function updateSyncStatus(connected) {
@@ -375,6 +396,8 @@
 
         function saveToCloud() {
             appData.schedules = cleanDuplicateSchedules(appData.schedules);
+            appData.projects = cleanDuplicateProjects(appData.projects);
+            appData.inProgress = cleanDuplicateProjects(appData.inProgress);
             localStorage.setItem('workblocker_local_data', JSON.stringify(appData));
             try { firebase.database().ref('workblocker_data').set(appData); } catch(e){}
         }
@@ -489,7 +512,9 @@
 
             if (projIdx !== -1) {
                 appData.projects.splice(projIdx, 1);
-                appData.inProgress.push(proj);
+                if (!appData.inProgress.some(p => p.id == proj.id)) {
+                    appData.inProgress.push(proj);
+                }
             }
 
             const newSchedule = {
@@ -550,7 +575,7 @@
                 });
             }
 
-            // Calendario Settimanale Ordinato e senza duplicati
+            // CALENDARIO SETTIMANALE ORDINATO E PULITO
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
             if(grid) {
