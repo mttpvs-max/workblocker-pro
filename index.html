@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Standalone Certified Engine</title>
+    <title>WorkBlocker PRO - Final Complete Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-viola-ritardo { background-color: #8b5cf6 !important; }
@@ -17,10 +17,10 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile (Locale)</span>
+            <span class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile & Completo</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="hardResetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Reset e Carica Progetti</button>
+            <button type="button" onclick="hardResetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Reset e Ricarica</button>
             <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
             <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
@@ -41,12 +41,12 @@
         <!-- DASHBOARD -->
         <div id="section-dashboard" class="space-y-6">
 
-            <!-- MONITORAGGIO ATTIVITÀ & GOOGLE CALENDAR (ORARIO REALE) -->
+            <!-- MONITORAGGIO ATTIVITÀ & BARRA DI AVANZAMENTO -->
             <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div class="flex items-center space-x-2">
                         <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
-                        <h2 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Monitoraggio Attività & Google Calendar</h2>
+                        <h2 class="text-md font-bold text-emerald-400 uppercase tracking-wider">Monitoraggio Attività & Avanzamento</h2>
                     </div>
                     <span id="current-clock" class="text-xs font-mono text-slate-400"></span>
                 </div>
@@ -64,7 +64,7 @@
 
             <!-- FORM PROGRAMMAZIONE -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero (Sposta Progetto in "In Corso")</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero (Sposta in "In Corso")</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
@@ -85,7 +85,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio Desiderato</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio</label>
                             <input type="time" id="sched-starttime" value="09:00" oninput="calculateEndTime()" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                         <div>
@@ -192,16 +192,18 @@
             { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        const defaultProjects = [
-            { id: 101, name: 'App Work Bloker ODAP', color: '#6366f1', endDate: '2026-12-31', milestones: [{name:'Setup e Refactoring Engine', subDate:'2026-10-20', completed:false}] },
-            { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', completed:false}] },
-            { id: 103, name: 'Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', completed:false}] }
+        const defaultPlanned = [
+            { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', completed:false}] }
         ];
 
-        // Inizializzazione pulita senza dipendenza da Firebase
-        let appData = JSON.parse(localStorage.getItem('wb_standalone_v1')) || {
-            projects: defaultProjects,
-            inProgress: [],
+        const defaultInProgress = [
+            { id: 101, name: 'App Work Bloker ODAP', color: '#6366f1', endDate: '2026-12-31', creationDate: '2026-10-01', milestones: [{name:'Setup e Refactoring Engine', subDate:'2026-10-20', completed:false}] },
+            { id: 103, name: 'Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', creationDate: '2026-10-01', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', completed:true}] }
+        ];
+
+        let appData = JSON.parse(localStorage.getItem('wb_complete_v2')) || {
+            projects: defaultPlanned,
+            inProgress: defaultInProgress,
             schedules: [
                 { id: 201, projectId: 101, projectName: 'App Work Bloker ODAP', color: '#6366f1', executor: 'Matteo Pavese', startT: '08:30', endT: '09:30', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] },
                 { id: 202, projectId: 103, projectName: 'Ristruttura studio', color: '#22c55e', executor: 'Matteo Pavese', startT: '14:00', endT: '16:00', days: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven'] }
@@ -218,12 +220,12 @@
         });
 
         function hardResetAppData() {
-            localStorage.removeItem('wb_standalone_v1');
+            localStorage.removeItem('wb_complete_v2');
             location.reload();
         }
 
         function saveData() {
-            localStorage.setItem('wb_standalone_v1', JSON.stringify(appData));
+            localStorage.setItem('wb_complete_v2', JSON.stringify(appData));
         }
 
         function startMainClock() {
@@ -274,13 +276,11 @@
             const todayDay = daysMap[now.getDay()];
             const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            // Cerca EVENTO IN CORSO
             let active = googleCalendarEvents.find(e => e.day === todayDay && currentTimeStr >= e.startT && currentTimeStr <= e.endT);
             if (!active) {
                 active = appData.schedules.find(s => s.days && s.days.includes(todayDay) && currentTimeStr >= s.startT && currentTimeStr <= s.endT);
             }
 
-            // Se nulla è in corso, cerca il PROSSIMO
             let isRunningNow = true;
             if (!active) {
                 isRunningNow = false;
@@ -293,6 +293,14 @@
                 const isCal = active.isCalendar;
                 const proj = isCal ? active : (appData.inProgress.concat(appData.projects).find(p => p.id == active.projectId) || active);
                 
+                // Calcolo barra di avanzamento e milestone
+                const startDate = new Date(proj.creationDate || '2026-10-01');
+                const endDate = new Date(proj.endDate || '2026-12-31');
+                const totalSpan = Math.max(1, endDate - startDate);
+                const elapsed = Math.max(0, now - startDate);
+                let progressPercent = Math.min(100, Math.round((elapsed / totalSpan) * 100));
+                let isDelayed = now > endDate;
+
                 let milestonesListHtml = isCal ? '<p class="text-xs text-slate-400">Impegno sincronizzato da Google Calendar (Priorità attiva).</p>' : 
                     (proj.milestones || []).map((m, idx) => `
                         <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700 text-xs">
@@ -309,14 +317,27 @@
                         <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${active.name || proj.projectName || proj.name}</h3>
                         <span class="text-xs px-2 py-1 rounded ${isCal ? 'bg-blue-900 text-blue-200' : 'bg-indigo-900 text-indigo-200'} font-semibold">${isCal ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
                     </div>
-                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO' : '⏳ PROSSIMO IN PROGRAMMA'})</div>
+                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO' : '⏳ PROSSIMO'})</div>
+                    
+                    ${!isCal ? `
+                    <div class="w-full space-y-1">
+                        <div class="flex justify-between text-xs text-slate-400">
+                            <span>Avvio: ${startDate.toLocaleDateString()}</span>
+                            <span class="${isDelayed ? 'text-viola-ritardo font-bold' : 'text-emerald-400 font-bold'}">${isDelayed ? '⚠️ RITARDO' : 'In Corso'} (${progressPercent}%)</span>
+                            <span>Scadenza: ${endDate.toLocaleDateString()}</span>
+                        </div>
+                        <div class="relative w-full bg-slate-700 h-4 rounded-full overflow-hidden">
+                            <div class="${isDelayed ? 'bg-viola-ritardo' : 'bg-indigo-600'} h-4 rounded-full transition-all duration-500" style="width: ${progressPercent}%;"></div>
+                        </div>
+                    </div>` : ''}
+
                     <div class="w-full space-y-2 pt-2">
                         <span class="text-xs font-bold text-indigo-300">Milestone & Dettagli:</span>
                         ${milestonesListHtml}
                     </div>
                 `;
             } else {
-                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessuna attività o impegno programmato per il resto della giornata.</div>`;
+                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessuna attività programmata per il resto della giornata.</div>`;
             }
         }
 
@@ -378,7 +399,7 @@
                 let p = appData.projects.concat(appData.inProgress).find(proj => proj.id == editId);
                 if (p) { p.name = name; p.color = color; p.endDate = endDate; p.milestones = milestones; }
             } else {
-                appData.projects.push({ id: Date.now(), name, color, endDate, milestones });
+                appData.projects.push({ id: Date.now(), creationDate: new Date().toISOString().split('T')[0], name, color, endDate, milestones });
             }
 
             saveData();
