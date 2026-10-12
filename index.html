@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkBlocker PRO - Fixed Engine</title>
+    <title>WorkBlocker PRO - Final Stable Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .bg-viola-ritardo { background-color: #8b5cf6 !important; }
@@ -17,10 +17,10 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">⚡</span>
             <h1 class="text-lg md:text-xl font-bold tracking-wider text-indigo-400">WorkBlocker PRO</h1>
-            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Attivo e Sincronizzato</span>
+            <span id="sync-status" class="text-[10px] md:text-xs px-2 py-1 rounded bg-emerald-600 text-white font-medium">Stabile</span>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" onclick="resetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Ripristino Dati Iniziali</button>
+            <button type="button" onclick="resetAppData()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer shadow">🔄 Ripristina Dati Iniziali</button>
             <button type="button" onclick="triggerMorningBriefing()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">☀️ Briefing</button>
             <button type="button" onclick="triggerPreAlert()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs md:text-sm font-medium transition cursor-pointer shadow">🔔 Pre-avviso</button>
         </div>
@@ -41,7 +41,7 @@
         <!-- DASHBOARD -->
         <div id="section-dashboard" class="space-y-6">
 
-            <!-- MONITORAGGIO ATTIVITÀ & GOOGLE CALENDAR PRIORITARIO -->
+            <!-- MONITORAGGIO ATTIVITÀ & GOOGLE CALENDAR (ORA CORRETTA) -->
             <div id="active-now-container" class="bg-slate-800 p-6 rounded-xl border-2 border-indigo-500 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                     <div class="flex items-center space-x-2">
@@ -53,18 +53,18 @@
                 <div id="active-tracker-content" class="space-y-4"></div>
             </div>
 
-            <!-- VISTA SETTIMANALE UNIFICATA CON BUFFER SLITTAMENTO -->
+            <!-- VISTA SETTIMANALE UNIFICATA -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Google Calendar + WorkBlocker Progetti)</h2>
-                    <span class="text-xs text-slate-400">Buffer Smart 30 min attivo</span>
+                    <h2 class="text-md font-semibold text-indigo-300">📅 Vista Settimanale (Google Calendar + Progetti WorkBlocker)</h2>
+                    <span class="text-xs text-slate-400">Aggiornata e sincronizzata</span>
                 </div>
                 <div id="weekly-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2"></div>
             </div>
 
             <!-- FORM PROGRAMMAZIONE -->
             <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-4">
-                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero (Sposta Progetto in "In Corso")</h2>
+                <h2 class="text-lg font-semibold text-indigo-300 border-b border-slate-700 pb-2">📅 Inserisci Slot Giornaliero (Sposta in "In Corso")</h2>
                 <form id="schedule-form" onsubmit="startDailySchedule(event)" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
@@ -85,7 +85,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio Desiderato</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Orario Inizio</label>
                             <input type="time" id="sched-starttime" value="09:00" oninput="calculateEndTime()" required class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs md:text-sm">
                         </div>
                         <div>
@@ -184,7 +184,6 @@
     </main>
 
     <script>
-        // Eventi reali Google Calendar per la settimana
         const googleCalendarEvents = [
             { id: 'c1', name: 'Banco desio fido e fin', startT: '10:00', endT: '10:25', color: '#3b82f6', day: 'Lun', date: '2026-10-12', isCalendar: true },
             { id: 'c2', name: 'Call Noemi', startT: '11:30', endT: '11:55', color: '#10b981', day: 'Lun', date: '2026-10-12', isCalendar: true },
@@ -193,14 +192,13 @@
             { id: 'c5', name: 'Visita Dermatologica', startT: '09:30', endT: '11:05', color: '#8b5cf6', day: 'Gio', date: '2026-10-15', isCalendar: true }
         ];
 
-        // Struttura dati iniziale garantita con i 3 progetti
         const defaultProjects = [
             { id: 101, name: 'App Work Bloker ODAP', color: '#6366f1', endDate: '2026-12-31', milestones: [{name:'Setup e Refactoring Engine', subDate:'2026-10-20', completed:false}] },
             { id: 102, name: 'Causa Via Bodio', color: '#eab308', endDate: '2026-10-31', milestones: [{name:'Deposito Perizia Tecnica', subDate:'2026-10-25', completed:false}] },
             { id: 103, name: 'Ristruttura studio', color: '#22c55e', endDate: '2026-12-30', milestones: [{name:'Completamento Demolizioni', subDate:'2026-10-18', completed:false}] }
         ];
 
-        let appData = JSON.parse(localStorage.getItem('wb_v5_data')) || {
+        let appData = JSON.parse(localStorage.getItem('wb_v6_data')) || {
             projects: defaultProjects,
             inProgress: [],
             schedules: [
@@ -219,14 +217,14 @@
         });
 
         function resetAppData() {
-            if (confirm("Ripristinare i 3 progetti e la programmazione base?")) {
-                localStorage.removeItem('wb_v5_data');
+            if (confirm("Ripristinare i dati iniziali dei progetti?")) {
+                localStorage.removeItem('wb_v6_data');
                 location.reload();
             }
         }
 
         function saveData() {
-            localStorage.setItem('wb_v5_data', JSON.stringify(appData));
+            localStorage.setItem('wb_v6_data', JSON.stringify(appData));
         }
 
         function startMainClock() {
@@ -277,12 +275,16 @@
             const todayDay = daysMap[now.getDay()];
             const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+            // Cerca prima un evento in corso EFFETTIVO (ora corrente inclusa tra startT ed endT)
             let active = googleCalendarEvents.find(e => e.day === todayDay && currentTimeStr >= e.startT && currentTimeStr <= e.endT);
             if (!active) {
                 active = appData.schedules.find(s => s.days && s.days.includes(todayDay) && currentTimeStr >= s.startT && currentTimeStr <= s.endT);
             }
+            // Se non c'è nulla in corso adesso, cerca il PROSSIMO evento della giornata
             if (!active) {
-                active = googleCalendarEvents.find(e => e.day === todayDay) || appData.schedules[0];
+                const todayEvents = googleCalendarEvents.filter(e => e.day === todayDay).concat(appData.schedules.filter(s => s.days && s.days.includes(todayDay)));
+                todayEvents.sort((a, b) => a.startT.localeCompare(b.startT));
+                active = todayEvents.find(e => e.startT > currentTimeStr) || todayEvents[0];
             }
 
             if (active) {
@@ -300,17 +302,21 @@
                         </div>
                     `).join('');
 
+                const isRunningNow = currentTimeStr >= active.startT && currentTimeStr <= active.endT;
+
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <h3 class="text-xl font-bold text-white uppercase tracking-wide" style="color: ${proj.color || '#3b82f6'}">${active.name || proj.name}</h3>
                         <span class="text-xs px-2 py-1 rounded ${isCal ? 'bg-blue-900 text-blue-200' : 'bg-indigo-900 text-indigo-200'} font-semibold">${isCal ? '📅 Google Calendar' : '⚡ WorkBlocker Slot'}</span>
                     </div>
-                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> | ${isCal ? 'Priorità Automatica' : 'Esecutore: ' + active.executor}</div>
+                    <div class="text-xs text-slate-300">Orario: <b>${active.startT} - ${active.endT}</b> (${isRunningNow ? '🟢 IN CORSO' : '⏳ PROSSIMO'}) | ${isCal ? 'Priorità Automatica' : 'Esecutore: ' + (active.executor || 'Matteo')}</div>
                     <div class="w-full space-y-2 pt-2">
                         <span class="text-xs font-bold text-indigo-300">Milestone & Dettagli:</span>
                         ${milestonesListHtml}
                     </div>
                 `;
+            } else {
+                container.innerHTML = `<div class="text-slate-400 text-sm py-3 text-center">Nessuna attività programmata per oggi.</div>`;
             }
         }
 
@@ -378,7 +384,7 @@
             saveData();
             resetProjectForm();
             renderUI();
-            alert('Progetto salvato!');
+            alert('Progetto salvato con successo!');
         }
 
         function openDetailModal(projId) {
@@ -388,7 +394,7 @@
             document.getElementById('editing-proj-id').value = proj.id;
             document.getElementById('p-name').value = proj.name;
             document.getElementById('p-color').value = proj.color || '#4f46e5';
-            document.getElementById('p-enddate').value = proj.endDate;
+            document.getElementById('p-enddate').value = proj.endDate || '';
             document.getElementById('form-proj-title').innerText = '✏️ Modifica Scheda Progetto';
 
             const container = document.getElementById('milestones-container');
@@ -408,7 +414,6 @@
             let startT = document.getElementById('sched-starttime').value;
             const checkedDays = Array.from(document.querySelectorAll('input[name="day-flag"]:checked')).map(cb => cb.value);
 
-            // LOGICA SMART BUFFER 30 MINUTI
             checkedDays.forEach(day => {
                 googleCalendarEvents.forEach(cal => {
                     if (cal.day === day) {
@@ -416,7 +421,6 @@
                         let endT = addMinutesToTime(startT, duration);
 
                         if (!isCallOrPayment) {
-                            // Se entra in rotta di collisione con l'evento Google, slitta a 30 min dopo la fine di Calendar
                             if (startT < cal.endT && endT > cal.startT) {
                                 startT = addMinutesToTime(cal.endT, 30);
                             }
@@ -429,7 +433,6 @@
             let proj = null;
 
             if (projIdx !== -1) {
-                // Sposta da Pianificati a In Corso
                 proj = appData.projects.splice(projIdx, 1)[0];
                 appData.inProgress.push(proj);
             } else {
@@ -451,7 +454,7 @@
 
             saveData();
             renderUI();
-            alert(`Progetto "${proj.name}" schedulato con successo e spostato in "In Corso"!`);
+            alert(`Progetto "${proj.name}" schedulato e spostato in "In Corso"!`);
         }
 
         function renderUI() {
@@ -475,7 +478,7 @@
                         <div class="bg-slate-900 p-4 rounded border border-slate-700 flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
-                                <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
+                                <p class="text-xs text-slate-400">Scadenza: ${p.endDate || 'N/D'}</p>
                             </div>
                             <button onclick="openDetailModal(${p.id})" class="bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded text-xs cursor-pointer">Modifica</button>
                         </div>`;
@@ -491,14 +494,14 @@
                         <div class="bg-slate-900 p-4 rounded border border-slate-700 flex justify-between items-center">
                             <div>
                                 <span class="font-bold text-sm" style="color: ${p.color}">${p.name}</span>
-                                <p class="text-xs text-slate-400">Scadenza: ${p.endDate}</p>
+                                <p class="text-xs text-slate-400">Scadenza: ${p.endDate || 'N/D'}</p>
                             </div>
                             <button onclick="openDetailModal(${p.id})" class="bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded text-xs cursor-pointer">Modifica Scheda</button>
                         </div>`;
                 });
             }
 
-            // GRIGLIA SETTIMANALE COMPLETA
+            // GRIGLIA SETTIMANALE
             const daysOrder = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
             const grid = document.getElementById('weekly-calendar-grid');
             if(grid) {
@@ -541,7 +544,7 @@
         }
 
         function triggerMorningBriefing() {
-            playPreAlertSpeech("Buongiorno Matteo. Tutti i tre progetti e gli impegni della settimana sono caricati correttamente.");
+            playPreAlertSpeech("Buongiorno Matteo. Tutti i progetti e gli impegni della settimana sono caricati correttamente.");
         }
 
         function triggerPreAlert() {
